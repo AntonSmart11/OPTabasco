@@ -65,49 +65,18 @@ fun LoginScreen(navController: NavController) {
                 Column(modifier = Modifier.padding(horizontal = 20.dp),
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally) {
-                    TextField(
-                        value = userField.value,
-                        onValueChange = { userField.value = it },
-                        label = { Text("Usuario", color = colorResource(R.color.pantone468)) },
-                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(colorResource(R.color.pantone490)),
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = colorResource(R.color.pantone490), // Color de fondo cuando está enfocado
-                            unfocusedContainerColor = colorResource(R.color.pantone490), // Color de fondo cuando no está enfocado
-                            focusedIndicatorColor = Color.Transparent, // Color de la línea inferior cuando está enfocado
-                            unfocusedIndicatorColor = Color.Transparent // Color de la línea inferior cuando no está enfocado
-                        ),
-                        textStyle = TextStyle(
-                            color = colorResource(R.color.pantone468), // Color del texto
-                            fontSize = 18.sp, // Tamaño de la fuente
-                            fontWeight = FontWeight.Bold, // Peso del texto
-                            textAlign = TextAlign.Center
-                        ),
-                        shape = RoundedCornerShape(16.dp), // Esquinas redondeadas
-                        maxLines = 1
+
+                    CustomTextField(
+                        valueState = userField,
+                        label = "Usuario",
                     )
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    TextField(
-                        value = passwordField.value,
-                        onValueChange = { passwordField.value = it },
-                        label = { Text("Contraseña", color = colorResource(R.color.pantone468)) },
-                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(colorResource(R.color.pantone490)),
-                        visualTransformation = PasswordVisualTransformation(),
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = colorResource(R.color.pantone490), // Color de fondo cuando está enfocado
-                            unfocusedContainerColor = colorResource(R.color.pantone490), // Color de fondo cuando no está enfocado
-                            focusedIndicatorColor = Color.Transparent, // Color de la línea inferior cuando está enfocado
-                            unfocusedIndicatorColor = Color.Transparent // Color de la línea inferior cuando no está enfocado
-                        ),
-                        textStyle = TextStyle(
-                            color = colorResource(R.color.pantone468), // Color del texto
-                            fontSize = 18.sp, // Tamaño de la fuente
-                            fontWeight = FontWeight.Bold, // Peso del texto
-                            textAlign = TextAlign.Center
-                        ),
-                        shape = RoundedCornerShape(16.dp), // Esquinas redondeadas
-                        maxLines = 1
+                    CustomTextField(
+                        valueState = passwordField,
+                        label = "Contraseña",
+                        isPassword = true,
                     )
 
                     Spacer(modifier = Modifier.height(30.dp))
