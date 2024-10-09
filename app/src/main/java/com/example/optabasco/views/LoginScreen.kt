@@ -1,8 +1,10 @@
 package com.example.optabasco.views
 
 import android.annotation.SuppressLint
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -24,10 +26,12 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -38,15 +42,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.optabasco.R
+import com.example.optabasco.database.AppDatabase
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(navController: NavController) {
     val scrollState = rememberScrollState()
 
-    val userField = remember { mutableStateOf("") }
+    val curpField = remember { mutableStateOf("") }
     val passwordField = remember { mutableStateOf("") }
+
+    //Crear un scope de corutina
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     Scaffold(
         //topBar = { TopAppBar(title = { Text("Prueba")})},
@@ -67,8 +77,8 @@ fun LoginScreen(navController: NavController) {
                     horizontalAlignment = Alignment.CenterHorizontally) {
 
                     CustomTextField(
-                        valueState = userField,
-                        label = "Usuario",
+                        valueState = curpField,
+                        label = "CURP",
                     )
 
                     Spacer(modifier = Modifier.height(20.dp))
@@ -83,15 +93,31 @@ fun LoginScreen(navController: NavController) {
 
                     Button(
                         onClick = {
+                            //Iniciar sesión
+                            coroutineScope.launch {
+                                val userDao = AppDatabase.getDatabase(context).userDao()
+                                val user = userDao.getUserByCurp(curpField.value)
+
+                                if (user != null && user.contrasena == passwordField.value) {
+                                    //Mensaje
+                                    Toast.makeText(context, "Iniciado correctamente", Toast.LENGTH_LONG).show()
+
+                                    //Navegar al dashboard
+                                    navController.navigate("dashboardAdmin")
+                                } else {
+                                    //Mensaje de error
+                                    Toast.makeText(context, "CURP o contraseña incorrectos", Toast.LENGTH_LONG).show()
+                                }
+                            }
 
                         },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 90.dp)
-                            .height(50.dp), // Altura del botón
-                        shape = RoundedCornerShape(30.dp), // Esquinas redondeadas
+                            .height(50.dp),
+                        shape = RoundedCornerShape(30.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = colorResource(R.color.pantone465) // Color de fondo del botón
+                            containerColor = colorResource(R.color.pantone465)
                         )
                     ) {
                         Text(
@@ -102,11 +128,13 @@ fun LoginScreen(navController: NavController) {
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(50.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     Text(text = "¿No tienes cuenta?", color = colorResource(R.color.pantone465), fontSize = 20.sp, fontWeight = FontWeight.Normal, textAlign = TextAlign.Center)
                     Spacer(modifier = Modifier.height(5.dp))
-                    Text(text = "Registrate", color = colorResource(R.color.pantone465), fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center)
+                    Text(text = "Registrate", color = colorResource(R.color.pantone465), fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center, modifier = Modifier.clickable {
+                        navController.navigate("register")
+                    })
                 }
             }
         }

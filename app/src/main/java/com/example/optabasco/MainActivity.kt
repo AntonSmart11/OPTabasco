@@ -16,6 +16,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.optabasco.ui.theme.OPTabascoTheme
 import com.example.optabasco.views.LoginScreen
+import com.example.optabasco.views.RegisterScreen
+import com.example.optabasco.views.admin.DashboardAdminScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,5 +35,7 @@ fun MyApp() {
 
     NavHost(navController = navController, startDestination = "login") {
         composable("login") { LoginScreen(navController) }
+        composable("register") { RegisterScreen(navController) }
+        composable("dashboardAdmin") { DashboardAdminScreen(navController) }
     }
 }
