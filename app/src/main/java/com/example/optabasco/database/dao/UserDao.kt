@@ -20,8 +20,14 @@ interface UserDao {
     @Query("SELECT * FROM usuarios WHERE curp = :curp")
     suspend fun getUserByCurp(curp: String): User?
 
+    @Query("SELECT * FROM usuarios WHERE correo = :email")
+    suspend fun getUserByEmail(email: String): User?
+
+    @Query("SELECT * FROM usuarios WHERE id = :id")
+    suspend fun getUserById(id: Int): User?
+
     @Update
-    suspend fun updateUser(user: User)
+    suspend fun updateUser(user: User) : Int
 
     @Delete
     suspend fun deleteUser(user: User)

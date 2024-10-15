@@ -1,17 +1,13 @@
 package com.example.optabasco.views
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -22,33 +18,30 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.optabasco.R
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CustomTextField(
+fun CustomOutlinedTextField(
     valueState: MutableState<String>,
     label: String,
     isPassword: Boolean = false,
     enabled: Boolean = true,
-    modifier: Modifier = Modifier
 ) {
     val visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None
 
-    TextField(
+    OutlinedTextField(
         value = valueState.value,
         onValueChange = { valueState.value = it },
-        label = { Text(label, color = colorResource(R.color.pantone468))},
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(colorResource(R.color.pantone490)),
-        colors = TextFieldDefaults.colors(
-                focusedContainerColor = colorResource(R.color.pantone490),
-                unfocusedContainerColor = colorResource(R.color.pantone490),
-                cursorColor = colorResource(R.color.pantone468),
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                disabledContainerColor = Color.Gray,
-                disabledIndicatorColor = Color.Gray,
+        label = {
+            Text(
+                label,
+                color = colorResource(R.color.pantone468)
+            )
+        },
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = colorResource(R.color.pantone468),
+            unfocusedTextColor = colorResource(R.color.pantone468),
+            focusedBorderColor = colorResource(R.color.pantone468),
+            unfocusedBorderColor = colorResource(R.color.pantone468),
+            cursorColor = colorResource(R.color.pantone468),
         ),
         visualTransformation = visualTransformation,
         textStyle = TextStyle(
@@ -59,6 +52,7 @@ fun CustomTextField(
         ),
         enabled = enabled,
         shape = RoundedCornerShape(16.dp),
-        maxLines = 1
+        maxLines = 1,
+        modifier = Modifier.fillMaxWidth()
     )
 }

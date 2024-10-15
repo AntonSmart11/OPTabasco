@@ -18,6 +18,7 @@ import com.example.optabasco.ui.theme.OPTabascoTheme
 import com.example.optabasco.views.LoginScreen
 import com.example.optabasco.views.RegisterScreen
 import com.example.optabasco.views.admin.DashboardAdminScreen
+import com.example.optabasco.views.admin.ProfileAdminScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,5 +38,6 @@ fun MyApp() {
         composable("login") { LoginScreen(navController) }
         composable("register") { RegisterScreen(navController) }
         composable("dashboardAdmin") { DashboardAdminScreen(navController) }
+        composable("profileAdmin") { ProfileAdminScreen(navController) }
     }
 }

@@ -1,6 +1,8 @@
 package com.example.optabasco.views
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.SharedPreferences
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -51,7 +53,7 @@ import kotlinx.coroutines.launch
 fun LoginScreen(navController: NavController) {
     val scrollState = rememberScrollState()
 
-    val curpField = remember { mutableStateOf("") }
+    val emailField = remember { mutableStateOf("") }
     val passwordField = remember { mutableStateOf("") }
 
     //Crear un scope de corutina
@@ -77,8 +79,8 @@ fun LoginScreen(navController: NavController) {
                     horizontalAlignment = Alignment.CenterHorizontally) {
 
                     CustomTextField(
-                        valueState = curpField,
-                        label = "CURP",
+                        valueState = emailField,
+                        label = "Correo electrónico",
                     )
 
                     Spacer(modifier = Modifier.height(20.dp))
@@ -96,11 +98,14 @@ fun LoginScreen(navController: NavController) {
                             //Iniciar sesión
                             coroutineScope.launch {
                                 val userDao = AppDatabase.getDatabase(context).userDao()
-                                val user = userDao.getUserByCurp(curpField.value)
+                                val user = userDao.getUserByEmail(emailField.value)
 
                                 if (user != null && user.contrasena == passwordField.value) {
                                     //Mensaje
                                     Toast.makeText(context, "Iniciado correctamente", Toast.LENGTH_LONG).show()
+
+                                    //Guarda los datos del usuario en una variable global
+                                    saveUserSession(context, emailField.value)
 
                                     //Navegar al dashboard
                                     navController.navigate("dashboardAdmin")
@@ -139,4 +144,11 @@ fun LoginScreen(navController: NavController) {
             }
         }
     )
+}
+
+fun saveUserSession(context: Context, userEmail: String) {
+    val sharedPref: SharedPreferences = context.getSharedPreferences("UserSession", Context.MODE_PRIVATE)
+    val editor = sharedPref.edit()
+    editor.putString("userEmail", userEmail)
+    editor.apply()
 }

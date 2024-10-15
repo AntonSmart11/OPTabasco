@@ -12,6 +12,6 @@ data class User(
     val correo: String,
     val telefono: String,
     val curp: String,
-    val contrasena: String,
+    var contrasena: String,
     val nivel: Int,
 )

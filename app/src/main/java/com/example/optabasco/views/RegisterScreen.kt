@@ -123,14 +123,14 @@ fun RegisterScreen(navController: NavController) {
                     Spacer(modifier = Modifier.height(20.dp))
 
                     CustomTextField(
-                        valueState = emailField,
-                        label = "Correo electrónico"
+                        valueState = numberField,
+                        label = "Teléfono"
                     )
                     Spacer(modifier = Modifier.height(20.dp))
 
                     CustomTextField(
-                        valueState = numberField,
-                        label = "Teléfono"
+                        valueState = emailField,
+                        label = "Correo electrónico"
                     )
                     Spacer(modifier = Modifier.height(20.dp))
 
@@ -176,7 +176,7 @@ fun RegisterScreen(navController: NavController) {
                                         materno = lastMaternField.value,
                                         correo = emailField.value,
                                         telefono = numberField.value,
-                                        curp = curpField.value,
+                                        curp = curpField.value.uppercase(),
                                         contrasena = passwordField.value,
                                         nivel = 2
                                     )
@@ -260,12 +260,28 @@ suspend fun insertUser(context: Context, user: User, navController: NavControlle
     val database = AppDatabase.getDatabase(context)
     val userDao = database.userDao()
 
-    //Inserta el usuario a la base de datos
-    userDao.insert(user)
+    // Verificar si ya existe un usuario con la misma CURP o correo
+    val existingUserByCurp = userDao.getUserByCurp(user.curp)
+    val existingUserByEmail = userDao.getUserByEmail(user.correo)
 
-    // Mostrar el mensaje
-    Toast.makeText(context, "Registrado correctamente", Toast.LENGTH_LONG).show()
+    when {
+        existingUserByCurp != null -> {
+            // Mostrar el mensaje
+            Toast.makeText(context, "Ya existe un usuario con esa CURP", Toast.LENGTH_LONG).show()
+        }
+        existingUserByEmail != null -> {
+            // Mostrar el mensaje
+            Toast.makeText(context, "Ya existe un usuario con ese correo electrónico", Toast.LENGTH_LONG).show()
+        }
+        else -> {
+            //Inserta el usuario a la base de datos
+            userDao.insert(user)
 
-    //Redirección
-    navController.navigate("login")
+            // Mostrar el mensaje
+            Toast.makeText(context, "Registrado correctamente", Toast.LENGTH_LONG).show()
+
+            //Redirección
+            navController.navigate("login")
+        }
+    }
 }
