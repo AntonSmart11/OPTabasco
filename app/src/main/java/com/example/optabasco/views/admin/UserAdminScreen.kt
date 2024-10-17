@@ -1,7 +1,5 @@
 package com.example.optabasco.views.admin
 
-import android.content.Context
-import android.content.SharedPreferences
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -58,15 +56,13 @@ import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileAdminScreen(navController: NavController) {
+fun UserAdminScreen(navController: NavController, userId: Int) {
     val scrollState = rememberScrollState()
 
     val context = navController.context
     val contextDb = LocalContext.current
 
-    val coroutineScope = rememberCoroutineScope()
-
-    val userEmail = getUserSession(context)
+    val couroutineScope = rememberCoroutineScope()
 
     val userDao = AppDatabase.getDatabase(contextDb).userDao()
 
@@ -76,25 +72,23 @@ fun ProfileAdminScreen(navController: NavController) {
     val emailField = remember { mutableStateOf("") }
     val numberField = remember { mutableStateOf("") }
     val curpField = remember { mutableStateOf("") }
-    val passwordUser = remember { mutableStateOf("") }
     val levelUser = remember { mutableStateOf(2) }
-    val idUser = remember { mutableStateOf(0) }
+    val passwordUser = remember { mutableStateOf("") }
 
     val showDialog = remember { mutableStateOf(false) }
 
-    LaunchedEffect(userEmail) {
-        val userLoggin = userEmail?.let { userDao.getUserByEmail(it) }
+    LaunchedEffect(userId) {
+        val userSelected = userId.let { userDao.getUserById(it) }
 
-        userLoggin?.let { user ->
+        userSelected?.let { user ->
             nameField.value = user.nombre
             lastPaternField.value = user.paterno
             lastMaternField.value = user.materno
             emailField.value = user.correo
             numberField.value = user.telefono
             curpField.value = user.curp
-            passwordUser.value = user.contrasena
             levelUser.value = user.nivel
-            idUser.value = user.id
+            passwordUser.value = user.contrasena
         }
     }
 
@@ -128,7 +122,7 @@ fun ProfileAdminScreen(navController: NavController) {
             ) {
                 Spacer(Modifier.height(10.dp))
                 Text(
-                    text = "Perfil",
+                    text = "Usuario",
                     color = colorResource(R.color.pantone490),
                     fontSize = 45.sp,
                     fontWeight = FontWeight.ExtraBold
@@ -168,14 +162,13 @@ fun ProfileAdminScreen(navController: NavController) {
 
                 CustomTextField(
                     valueState = emailField,
-                    label = "Correo electrónico (Bloqueado)",
-                    enabled = false
+                    label = "Correo electrónico"
                 )
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Button(
                     onClick = {
-                        coroutineScope.launch {
+                        couroutineScope.launch {
                             val validationError = validateFields(
                                 name = nameField.value,
                                 lastPatern = lastPaternField.value,
@@ -187,21 +180,18 @@ fun ProfileAdminScreen(navController: NavController) {
 
                             if (validationError == null) {
                                 val editUser = User(
-                                    id = idUser.value,
+                                    id = userId,
                                     nombre = nameField.value,
                                     paterno = lastPaternField.value,
                                     materno = lastMaternField.value,
                                     correo = emailField.value,
                                     telefono = numberField.value,
                                     curp = curpField.value.uppercase(),
-                                    contrasena = passwordUser.value,
-                                    nivel = levelUser.value
+                                    nivel = levelUser.value,
+                                    contrasena = passwordUser.value
                                 )
 
                                 updateUser(context, editUser)
-                            } else {
-                                // Mostrar el mensaje de error
-                                Toast.makeText(context, validationError, Toast.LENGTH_LONG).show()
                             }
                         }
                     },
@@ -209,10 +199,10 @@ fun ProfileAdminScreen(navController: NavController) {
                         .fillMaxWidth()
                         .padding(horizontal = 70.dp)
                         .height(50.dp),
-                    shape = RoundedCornerShape(30.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = colorResource(R.color.pantone465)
-                    )
+                        shape = RoundedCornerShape(30.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colorResource(R.color.pantone465)
+                        )
                 ) {
                     Text(
                         text = "Guardar",
@@ -249,99 +239,20 @@ fun ProfileAdminScreen(navController: NavController) {
     )
 
     if (showDialog.value) {
-        ChangePasswordDialog(
+        ChangePasswordDialogAdmin(
             onDismiss = { showDialog.value = false },
-            idUser
+            userId
         )
-    }
-}
-
-fun saveUserSession(context: Context, userEmail: String) {
-    val sharedPref: SharedPreferences = context.getSharedPreferences("UserSession", Context.MODE_PRIVATE)
-    val editor = sharedPref.edit()
-    editor.putString("userEmail", userEmail)
-    editor.apply()
-}
-
-fun getUserSession(context: Context): String? {
-    val sharedPref: SharedPreferences = context.getSharedPreferences("UserSession", Context.MODE_PRIVATE)
-    return sharedPref.getString("userEmail", "")
-}
-
-fun validateFields(
-    name: String,
-    lastPatern: String,
-    lastMatern: String,
-    email: String,
-    number: String,
-    curp: String,
-): String? {
-    //Validar que ningún campo esté vacío
-    if (
-        name.isBlank() ||
-        lastPatern.isBlank() ||
-        lastMatern.isBlank() ||
-        email.isBlank() ||
-        number.isBlank() ||
-        curp.isBlank()
-    ) {
-        return "Todos los campos deben estar llenos"
-    }
-
-    if (number.length != 10) {
-        return "El número de teléfono debe tener 10 dígitos"
-    }
-
-    if (curp.length != 18) {
-        return "La CURP debe tener 18 caracteres"
-    }
-
-    return null
-}
-
-suspend fun updateUser(context: Context, user: User) {
-    val database = AppDatabase.getDatabase(context)
-    val userDao = database.userDao()
-
-    // Verificar si existe un usuario con el mismo correo, excluyendo al usuario actual
-    val existingUserByEmail = userDao.getUserByEmail(user.correo)
-    if (existingUserByEmail != null && existingUserByEmail.id != user.id) {
-        // El correo está en uso por otro usuario
-        Toast.makeText(context, "El correo ya está en uso por otro usuario", Toast.LENGTH_LONG).show()
-        return
-    }
-
-    // Verificar si existe un usuario con la misma CURP, excluyendo al usuario actual
-    val existingUserByCurp = userDao.getUserByCurp(user.curp)
-    if (existingUserByCurp != null && existingUserByCurp.id != user.id) {
-        // La CURP está en uso por otro usuario
-        Toast.makeText(context, "La CURP ya está en uso por otro usuario", Toast.LENGTH_LONG).show()
-        return
-    }
-
-    // Si no hay duplicados, actualiza el usuario en la base de datos
-    val rowsAffected = userDao.updateUser(user)
-
-    if (rowsAffected > 0) {
-        //Guarda los datos del usuario en una variable global
-        saveUserSession(context, user.correo)
-
-        //Mostrar mensaje
-        Toast.makeText(context, "Actualizado correctamente", Toast.LENGTH_LONG).show()
-    } else {
-        //Mostrar mensaje
-        Toast.makeText(context, "Error al actualizar", Toast.LENGTH_LONG).show()
     }
 }
 
 //Alert Dialog
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChangePasswordDialog(
+fun ChangePasswordDialogAdmin(
     onDismiss: () -> Unit,
-    userId: MutableState<Int>
+    userId: Int
 ) {
-    val oldPasswordField = remember { mutableStateOf("") }
     val newPasswordField = remember { mutableStateOf("") }
     val confirmPasswordField = remember { mutableStateOf("") }
 
@@ -372,14 +283,6 @@ fun ChangePasswordDialog(
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
-
-                    CustomOutlinedTextField(
-                        oldPasswordField,
-                        "Antigua contraseña",
-                        isPassword = true
-                    )
-
-                    Spacer(modifier = Modifier.height(10.dp))
 
                     CustomOutlinedTextField(
                         newPasswordField,
@@ -422,9 +325,8 @@ fun ChangePasswordDialog(
                             onClick = {
                                 // Llamar a la función de cambiar contraseña
                                 CoroutineScope(Dispatchers.IO).launch {
-                                    val result = AuthService(userDao = userDao).changePassword(
-                                        userId.value,
-                                        oldPasswordField.value,
+                                    val result = AuthService(userDao = userDao).changePasswordAdmin(
+                                        userId,
                                         newPasswordField.value,
                                         confirmPasswordField.value
                                     )

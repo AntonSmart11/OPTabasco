@@ -19,6 +19,8 @@ import com.example.optabasco.views.LoginScreen
 import com.example.optabasco.views.RegisterScreen
 import com.example.optabasco.views.admin.DashboardAdminScreen
 import com.example.optabasco.views.admin.ProfileAdminScreen
+import com.example.optabasco.views.admin.UserAdminScreen
+import com.example.optabasco.views.admin.UserMenuAdminScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,5 +41,10 @@ fun MyApp() {
         composable("register") { RegisterScreen(navController) }
         composable("dashboardAdmin") { DashboardAdminScreen(navController) }
         composable("profileAdmin") { ProfileAdminScreen(navController) }
+        composable("UserMenuAdmin") { UserMenuAdminScreen(navController) }
+        composable("UserAdmin/{userId}") { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId")?.toInt() ?: 0
+            UserAdminScreen(navController, userId = userId)
+        }
     }
 }

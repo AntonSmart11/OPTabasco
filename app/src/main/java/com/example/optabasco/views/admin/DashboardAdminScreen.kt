@@ -149,32 +149,32 @@ fun ContentDashboardAdmin(scope: CoroutineScope, drawerState: DrawerState, scrol
                 )
 
                 Spacer(modifier = Modifier.height(30.dp))
-                BoxButton(R.drawable.application, "Solicitudes", R.color.pantone7421)
+                BoxButton(R.drawable.application, "Solicitudes", R.color.pantone465, navController, "UserMenuAdmin")
 
                 Spacer(modifier = Modifier.height(30.dp))
-                BoxButton(R.drawable.users, "Usuarios", R.color.pantone7421)
+                BoxButton(R.drawable.users, "Usuarios", R.color.pantone465, navController, "UserMenuAdmin")
             }
         }
     )
 }
 
 @Composable
-fun BoxButton(image: Int, title:String, color: Int) {
+fun BoxButton(image: Int, title:String, color: Int, navController: NavController, destination: String) {
     Box(
         modifier = Modifier
             .height(200.dp)
             .fillMaxWidth()
             .padding(horizontal = 10.dp)
-            .clip(RoundedCornerShape(18.dp))
-            .shadow(elevation = 16.dp)
+            .shadow(elevation = 16.dp, shape = RoundedCornerShape(18.dp))
             .background(colorResource(color))
             .clickable {
-
+                navController.navigate(destination)
             }
     ) {
         // Imagen dentro del botón
-        Image(
+        Icon(
             painter = painterResource(id = image),
+            tint = colorResource(R.color.pantone468),
             contentDescription = title,
             modifier = Modifier
                 .size(150.dp)
