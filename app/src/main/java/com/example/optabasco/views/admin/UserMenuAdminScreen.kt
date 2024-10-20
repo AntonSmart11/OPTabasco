@@ -117,7 +117,7 @@ fun UserItem(user: User, navController: NavController) {
             .background(colorResource(R.color.pantone465))
             .padding(16.dp)
             .clickable {
-                navController.navigate("UserAdmin/$userId")
+                navController.navigate("userAdmin/$userId")
             }
     ) {
         Row(

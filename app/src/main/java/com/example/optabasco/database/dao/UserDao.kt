@@ -30,5 +30,5 @@ interface UserDao {
     suspend fun updateUser(user: User) : Int
 
     @Delete
-    suspend fun deleteUser(user: User)
+    suspend fun deleteUser(user: User) : Int
 }

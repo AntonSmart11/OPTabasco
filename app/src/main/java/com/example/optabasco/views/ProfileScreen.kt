@@ -1,4 +1,4 @@
-package com.example.optabasco.views.admin
+package com.example.optabasco.views
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -49,8 +49,6 @@ import com.example.optabasco.R
 import com.example.optabasco.database.AppDatabase
 import com.example.optabasco.database.AuthService
 import com.example.optabasco.database.models.User
-import com.example.optabasco.views.CustomOutlinedTextField
-import com.example.optabasco.views.CustomTextField
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -58,7 +56,7 @@ import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileAdminScreen(navController: NavController) {
+fun ProfileScreen(navController: NavController) {
     val scrollState = rememberScrollState()
 
     val context = navController.context
@@ -80,7 +78,8 @@ fun ProfileAdminScreen(navController: NavController) {
     val levelUser = remember { mutableStateOf(2) }
     val idUser = remember { mutableStateOf(0) }
 
-    val showDialog = remember { mutableStateOf(false) }
+    val showDialogPassword = remember { mutableStateOf(false) }
+    val showDialogDelete = remember { mutableStateOf(false) }
 
     LaunchedEffect(userEmail) {
         val userLoggin = userEmail?.let { userDao.getUserByEmail(it) }
@@ -226,7 +225,7 @@ fun ProfileAdminScreen(navController: NavController) {
 
                 Button(
                     onClick = {
-                        showDialog.value = true
+                        showDialogPassword.value = true
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -244,14 +243,47 @@ fun ProfileAdminScreen(navController: NavController) {
                         fontWeight = FontWeight.Bold
                     )
                 }
+
+                if (levelUser.value == 2) {
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Button(
+                        onClick = {
+                            showDialogDelete.value = true
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 70.dp)
+                            .height(50.dp),
+                        shape = RoundedCornerShape(30.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colorResource(R.color.pantone7420)
+                        )
+                    ) {
+                        Text(
+                            text = "Eliminar cuenta",
+                            color = colorResource(R.color.pantone468),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
         }
     )
 
-    if (showDialog.value) {
+    if (showDialogPassword.value) {
         ChangePasswordDialog(
-            onDismiss = { showDialog.value = false },
+            onDismiss = { showDialogPassword.value = false },
             idUser
+        )
+    }
+
+    if (showDialogDelete.value) {
+        DeleteAccountDialog(
+            onDismiss = { showDialogDelete.value = false },
+            idUser,
+            navController
         )
     }
 }
@@ -411,7 +443,7 @@ fun ChangePasswordDialog(
                         ) {
                             Text(
                                 "Cancelar",
-                                color = colorResource(R.color.pantone490),
+                                color = colorResource(R.color.pantone468),
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -456,5 +488,117 @@ fun ChangePasswordDialog(
                 }
             }
         },
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DeleteAccountDialog(
+    onDismiss: () -> Unit,
+    userId: MutableState<Int>,
+    navController: NavController
+) {
+
+    val contextDb = LocalContext.current
+    val database = AppDatabase.getDatabase(contextDb)
+    val userDao = database.userDao()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            dismissOnClickOutside = true
+        ),
+
+        // Modificar el contenido del diálogo con Surface para cambiar colores
+        content = {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = colorResource(R.color.pantone490),
+                modifier = Modifier.padding(16.dp),
+                shadowElevation = 1.dp
+            ) {
+                Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Eliminar cuenta",
+                        color = colorResource(R.color.pantone468),
+                        fontSize = 18.sp,
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    Text(
+                        text = "¿Estás seguro de que deseas eliminar esta cuenta? Se eliminarán las solicitudes y ya no podrás volver a inicar sesión.",
+                        color = colorResource(R.color.pantone468),
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Normal,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        TextButton(
+                            onClick = onDismiss,
+                            colors = ButtonDefaults.textButtonColors(
+                                containerColor = colorResource(R.color.pantone7420),
+                                contentColor = colorResource(R.color.pantone7420)
+                            ),
+                            modifier = Modifier.width(120.dp)
+                        ) {
+                            Text(
+                                "Cancelar",
+                                color = colorResource(R.color.pantone468),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        TextButton(
+                            onClick = {
+                                // Llamar a la función de cambiar contraseña
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    val user = userDao.getUserById(userId.value)
+
+                                    if (user != null) {
+                                        val deleted = userDao.deleteUser(user)
+
+                                        if (deleted > 0) {
+                                            withContext(Dispatchers.Main) {
+                                                Toast.makeText(contextDb, "Cuenta eliminada exitosamente", Toast.LENGTH_LONG).show()
+                                                onDismiss()
+
+                                                // Redirigir a login y limpiar el historial
+                                                navController.navigate("login") {
+                                                    popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                                                }
+                                            }
+
+                                        } else {
+                                            Toast.makeText(contextDb, "Hubo un error...", Toast.LENGTH_LONG).show()
+                                        }
+                                    }
+
+                                }
+                            },
+                            colors = ButtonDefaults.textButtonColors(
+                                containerColor = colorResource(R.color.pantone1805),
+                                contentColor = colorResource(R.color.pantone1805)
+                            ),
+                            modifier = Modifier.width(120.dp)
+                        ) {
+                            Text(
+                                "Eliminar",
+                                color = colorResource(R.color.pantone468),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+        }
     )
 }

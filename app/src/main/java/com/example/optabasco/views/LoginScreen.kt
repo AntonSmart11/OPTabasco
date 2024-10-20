@@ -107,11 +107,15 @@ fun LoginScreen(navController: NavController) {
                                     //Guarda los datos del usuario en una variable global
                                     saveUserSession(context, emailField.value)
 
-                                    //Navegar al dashboard
-                                    navController.navigate("dashboardAdmin")
+                                    //Navegar al dashboard, dependiendo del nivel
+                                    if (user.nivel == 1) {
+                                        navController.navigate("dashboardAdmin")
+                                    } else {
+                                        navController.navigate("dashboardUser")
+                                    }
                                 } else {
                                     //Mensaje de error
-                                    Toast.makeText(context, "CURP o contraseña incorrectos", Toast.LENGTH_LONG).show()
+                                    Toast.makeText(context, "Correo o contraseña incorrectos", Toast.LENGTH_LONG).show()
                                 }
                             }
 
@@ -144,11 +148,4 @@ fun LoginScreen(navController: NavController) {
             }
         }
     )
-}
-
-fun saveUserSession(context: Context, userEmail: String) {
-    val sharedPref: SharedPreferences = context.getSharedPreferences("UserSession", Context.MODE_PRIVATE)
-    val editor = sharedPref.edit()
-    editor.putString("userEmail", userEmail)
-    editor.apply()
 }
