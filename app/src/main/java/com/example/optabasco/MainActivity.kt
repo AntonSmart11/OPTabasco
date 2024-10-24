@@ -14,6 +14,7 @@ import com.example.optabasco.views.admin.DashboardAdminScreen
 import com.example.optabasco.views.ProfileScreen
 import com.example.optabasco.views.admin.UserAdminScreen
 import com.example.optabasco.views.admin.UserMenuAdminScreen
+import com.example.optabasco.views.users.ApplicationUserScreen
 import com.example.optabasco.views.users.DashboardUserScreen
 
 class MainActivity : ComponentActivity() {
@@ -43,5 +44,9 @@ fun MyApp() {
         }
 
         composable("dashboardUser") { DashboardUserScreen(navController) }
+        composable("applicationUser/{applicationId}") { backStackEntry ->
+            val applicationId = backStackEntry.arguments?.getString("applicationId")?.toInt() ?: 0
+            ApplicationUserScreen(navController, applicationId = applicationId)
+        }
     }
 }

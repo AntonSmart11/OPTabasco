@@ -7,6 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.example.optabasco.database.models.Application
+import com.example.optabasco.database.models.User
 
 @Dao
 interface ApplicationDao {
@@ -17,7 +18,10 @@ interface ApplicationDao {
     @Query("SELECT * FROM solicitudes")
     suspend fun getAllApplications(): List<Application>
 
-    @Query("SELECT * FROM solicitudes WHERE usuario_id = :userId")
+    @Query("SELECT * FROM solicitudes WHERE id = :id")
+    suspend fun getApplicationById(id: Int): Application?
+
+    @Query("SELECT * FROM solicitudes WHERE usuario_id = :userId ORDER BY fecha DESC")
     suspend fun getApplicationByUserId(userId: Int): List<Application>
 
     @Update

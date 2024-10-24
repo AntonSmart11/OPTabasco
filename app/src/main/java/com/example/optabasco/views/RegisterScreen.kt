@@ -3,7 +3,6 @@ package com.example.optabasco.views
 import android.annotation.SuppressLint
 import android.content.Context
 import android.widget.Toast
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -25,10 +23,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -44,7 +40,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.optabasco.R
 import com.example.optabasco.database.AppDatabase
-import com.example.optabasco.database.dao.UserDao
 import com.example.optabasco.database.models.User
 import kotlinx.coroutines.launch
 
@@ -156,7 +151,7 @@ fun RegisterScreen(navController: NavController) {
 
                     Button(
                         onClick = {
-                            val validationError = validateFields(
+                            val validationError = validateFieldsCreateUser(
                                 name = nameField.value,
                                 lastPatern = lastPaternField.value,
                                 lastMatern = lastMaternField.value,
@@ -217,7 +212,7 @@ fun RegisterScreen(navController: NavController) {
     )
 }
 
-fun validateFields(
+fun validateFieldsCreateUser(
     name: String,
     lastPatern: String,
     lastMatern: String,

@@ -175,7 +175,7 @@ fun ProfileScreen(navController: NavController) {
                 Button(
                     onClick = {
                         coroutineScope.launch {
-                            val validationError = validateFields(
+                            val validationError = validateFieldsCreateUser(
                                 name = nameField.value,
                                 lastPatern = lastPaternField.value,
                                 lastMatern = lastMaternField.value,
@@ -300,7 +300,7 @@ fun getUserSession(context: Context): String? {
     return sharedPref.getString("userEmail", "")
 }
 
-fun validateFields(
+fun validateFieldsCreateUser(
     name: String,
     lastPatern: String,
     lastMatern: String,
@@ -395,7 +395,10 @@ fun ChangePasswordDialog(
                 modifier = Modifier.padding(16.dp),
                 shadowElevation = 1.dp
             ) {
-                Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(
                         text = "Cambiar contraseña",
                         color = colorResource(R.color.pantone468),

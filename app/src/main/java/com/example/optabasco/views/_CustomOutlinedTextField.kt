@@ -24,6 +24,8 @@ fun CustomOutlinedTextField(
     label: String,
     isPassword: Boolean = false,
     enabled: Boolean = true,
+    maxLines: Int = 1,
+    modifier: Modifier = Modifier
 ) {
     val visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None
 
@@ -33,7 +35,8 @@ fun CustomOutlinedTextField(
         label = {
             Text(
                 label,
-                color = colorResource(R.color.pantone468)
+                color = colorResource(R.color.pantone468),
+                modifier = Modifier
             )
         },
         colors = OutlinedTextFieldDefaults.colors(
@@ -52,7 +55,7 @@ fun CustomOutlinedTextField(
         ),
         enabled = enabled,
         shape = RoundedCornerShape(16.dp),
-        maxLines = 1,
-        modifier = Modifier.fillMaxWidth()
+        maxLines = maxLines,
+        modifier = modifier.fillMaxWidth()
     )
 }

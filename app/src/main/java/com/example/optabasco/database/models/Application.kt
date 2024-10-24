@@ -18,12 +18,13 @@ import androidx.room.PrimaryKey
 data class Application(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val usuario_id: Int,
+    val titulo: String,
     val calle: String,
     val coloniaRancheria: String,
     val municipio: String,
     val tipoSolicitud: String,
     val descripcion: String,
     val fecha: String,
-    val solicitudAprobada: Boolean,
+    val aprobada: String,
     val estadoSolicitud: String
 )

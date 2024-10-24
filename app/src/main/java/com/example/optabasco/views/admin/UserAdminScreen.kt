@@ -29,7 +29,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -51,9 +50,7 @@ import com.example.optabasco.database.models.User
 import com.example.optabasco.views.CustomOutlinedTextField
 import com.example.optabasco.views.CustomTextField
 import com.example.optabasco.views.getUserSession
-import com.example.optabasco.views.saveUserSession
-import com.example.optabasco.views.updateUser
-import com.example.optabasco.views.validateFields
+import com.example.optabasco.views.validateFieldsCreateUser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -67,7 +64,7 @@ fun UserAdminScreen(navController: NavController, userId: Int) {
     val context = navController.context
     val contextDb = LocalContext.current
 
-    val couroutineScope = rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
 
     val userDao = AppDatabase.getDatabase(contextDb).userDao()
 
@@ -180,8 +177,8 @@ fun UserAdminScreen(navController: NavController, userId: Int) {
 
                 Button(
                     onClick = {
-                        couroutineScope.launch {
-                            val validationError = validateFields(
+                        coroutineScope.launch {
+                            val validationError = validateFieldsCreateUser(
                                 name = nameField.value,
                                 lastPatern = lastPaternField.value,
                                 lastMatern = lastMaternField.value,
