@@ -407,6 +407,8 @@ fun ChangePasswordDialogAdmin(
     )
 }
 
+
+// Alert Dialog Eliminar Cuenta
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeleteAccountDialog(
@@ -487,7 +489,7 @@ fun DeleteAccountDialog(
                                                 Toast.makeText(contextDb, "Cuenta eliminada exitosamente", Toast.LENGTH_LONG).show()
                                                 onDismiss()
 
-                                                // Redirigir a login y limpiar el historial
+                                                // Redirigir a menu
                                                 navController.popBackStack()
                                             }
 

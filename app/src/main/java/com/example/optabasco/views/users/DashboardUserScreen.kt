@@ -1,6 +1,7 @@
 package com.example.optabasco.views.users
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
@@ -26,6 +27,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
@@ -86,6 +88,8 @@ fun DashboardUserScreen(navController: NavController) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
+    val contextDb = LocalContext.current
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -104,6 +108,34 @@ fun DashboardUserScreen(navController: NavController) {
                     color = colorResource(R.color.pantone468),
                     modifier = Modifier.padding(vertical = 16.dp)
                 )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Button(
+                    onClick = {
+                        // Limpiar sesión de usuario
+                        clearUserSession(contextDb)
+
+                        // Navegar a la pantalla de login y limpiar el historial
+                        navController.navigate("login") {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    shape = RoundedCornerShape(30.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colorResource(R.color.pantone7420)
+                    )
+                ) {
+                    Text(
+                        text = "Cerrar Sesión",
+                        color = colorResource(R.color.pantone468),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     ) {
@@ -251,8 +283,31 @@ fun ApplicationItem(application: Application, navController: NavController) {
                 modifier = Modifier
                     .weight(1f)
             ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Tipo: ",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = colorResource(R.color.pantone490),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = application.tipoSolicitud,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp,
+                        color = colorResource(R.color.pantone490),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
                 Text(
-                    text = "Tipo: ${application.tipoSolicitud}",
+                    text = "Descripción: ",
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     color = colorResource(R.color.pantone490),
@@ -260,8 +315,8 @@ fun ApplicationItem(application: Application, navController: NavController) {
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "Descripción: ${application.descripcion}",
-                    fontWeight = FontWeight.Bold,
+                    text = application.descripcion,
+                    fontWeight = FontWeight.SemiBold,
                     fontSize = 16.sp,
                     color = colorResource(R.color.pantone490),
                     maxLines = 3,
@@ -539,4 +594,11 @@ fun getCurrentDate(): String {
     val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()) // Puedes ajustar el formato de la fecha
     val currentDate = Date()
     return dateFormat.format(currentDate)
+}
+
+fun clearUserSession(context: Context) {
+    val sharedPref: SharedPreferences = context.getSharedPreferences("UserSession", Context.MODE_PRIVATE)
+    val editor = sharedPref.edit()
+    editor.clear() // Elimina todos los datos guardados de la sesión
+    editor.apply()
 }

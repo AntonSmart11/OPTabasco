@@ -25,8 +25,8 @@ interface ApplicationDao {
     suspend fun getApplicationByUserId(userId: Int): List<Application>
 
     @Update
-    suspend fun updateApplication(application: Application)
+    suspend fun updateApplication(application: Application) : Int
 
     @Delete
-    suspend fun deleteApplication(application: Application)
+    suspend fun deleteApplication(application: Application) : Int
 }
