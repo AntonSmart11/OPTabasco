@@ -149,7 +149,7 @@ fun ContentDashboardAdmin(scope: CoroutineScope, drawerState: DrawerState, scrol
                 )
 
                 Spacer(modifier = Modifier.height(30.dp))
-                BoxButton(R.drawable.application, "Solicitudes", R.color.pantone465, navController, "userMenuAdmin")
+                BoxButton(R.drawable.application, "Solicitudes", R.color.pantone465, navController, "applicationMenuAdmin")
 
                 Spacer(modifier = Modifier.height(30.dp))
                 BoxButton(R.drawable.users, "Usuarios", R.color.pantone465, navController, "userMenuAdmin")

@@ -567,6 +567,7 @@ fun DeleteAccountDialog(
                                     val user = userDao.getUserById(userId.value)
 
                                     if (user != null) {
+                                        database.applicationDao().deleteApplicationsByUserId(userId.value)
                                         val deleted = userDao.deleteUser(user)
 
                                         if (deleted > 0) {

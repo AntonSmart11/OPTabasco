@@ -12,6 +12,7 @@ import com.example.optabasco.views.LoginScreen
 import com.example.optabasco.views.RegisterScreen
 import com.example.optabasco.views.admin.DashboardAdminScreen
 import com.example.optabasco.views.ProfileScreen
+import com.example.optabasco.views.admin.ApplicationMenuAdminScreen
 import com.example.optabasco.views.admin.UserAdminScreen
 import com.example.optabasco.views.admin.UserMenuAdminScreen
 import com.example.optabasco.views.users.ApplicationUserScreen
@@ -42,6 +43,8 @@ fun MyApp() {
             val userId = backStackEntry.arguments?.getString("userId")?.toInt() ?: 0
             UserAdminScreen(navController, userId = userId)
         }
+        composable("applicationMenuAdmin") { ApplicationMenuAdminScreen(navController) }
+
 
         composable("dashboardUser") { DashboardUserScreen(navController) }
         composable("applicationUser/{applicationId}") { backStackEntry ->

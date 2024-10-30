@@ -9,14 +9,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -45,36 +42,35 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.optabasco.R
 import com.example.optabasco.database.AppDatabase
-import com.example.optabasco.database.models.User
-import com.example.optabasco.views.CustomOutlinedTextField
+import com.example.optabasco.database.models.Application
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UserMenuAdminScreen(navController: NavController) {
+fun ApplicationMenuAdminScreen(navController: NavController) {
     val contextDb = LocalContext.current
-    val userDao = AppDatabase.getDatabase(contextDb).userDao()
+    val applicationDao = AppDatabase.getDatabase(contextDb).applicationDao()
 
-    val users = remember { mutableStateOf<List<User>>(emptyList()) }
+    val applications = remember { mutableStateOf<List<Application>>(emptyList()) }
     val searchQuery = remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
-        users.value = userDao.getAllUsers()
+        applications.value = applicationDao.getAllApplicationsByDate()
     }
 
-    val filteresUsers = users.value.filter {
-        val usuario = "${it.nombre} ${it.paterno} ${it.materno}"
-
-        usuario.contains(searchQuery.value, ignoreCase = true) ||
-        it.nombre.contains(searchQuery.value, ignoreCase = true) ||
-        it.paterno.contains(searchQuery.value, ignoreCase = true) ||
-        it.materno.contains(searchQuery.value, ignoreCase = true) ||
-        it.curp.contains(searchQuery.value, ignoreCase = true) ||
-        it.correo.contains(searchQuery.value, ignoreCase = true)
+    val filteredApplications = applications.value.filter {
+        it.titulo.contains(searchQuery.value, ignoreCase = true) ||
+        it.calle.contains(searchQuery.value, ignoreCase = true) ||
+        it.coloniaRancheria.contains(searchQuery.value, ignoreCase = true) ||
+        it.municipio.contains(searchQuery.value, ignoreCase = true) ||
+        it.tipoSolicitud.contains(searchQuery.value, ignoreCase = true) ||
+        it.fecha.contains(searchQuery.value, ignoreCase = true) ||
+        it.estadoSolicitud.contains(searchQuery.value, ignoreCase = true) ||
+        it.aprobada.contains(searchQuery.value, ignoreCase = true)
     }
 
     Scaffold(
         topBar = { CenterAlignedTopAppBar(
-            title = { Text("Usuarios", color = colorResource(R.color.pantone468), fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center)},
+            title = { Text("Usuarios", color = colorResource(R.color.pantone468), fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center) },
             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                 containerColor = colorResource(R.color.pantone490),
                 titleContentColor = colorResource(R.color.pantone468)
@@ -103,7 +99,7 @@ fun UserMenuAdminScreen(navController: NavController) {
                     onValueChange = { searchQuery.value = it },
                     label = {
                         Text(
-                            "Buscar usuario",
+                            "Buscar solicitud",
                             color = colorResource(R.color.pantone490)
                         )
                     },
@@ -125,16 +121,16 @@ fun UserMenuAdminScreen(navController: NavController) {
                     modifier = Modifier.fillMaxWidth().padding(5.dp)
                 )
 
-                if (filteresUsers.isEmpty()) {
-                    // Muestra un mensaje si no hay usuarios
-                    Text("No hay usuarios disponibles", color = colorResource(R.color.pantone490), fontWeight = FontWeight.Bold)
+                if (filteredApplications.isEmpty()){
+                    // Muestra un mensaje si no hay solicitudes
+                    Text("No hay solicitudes disponibles", color = colorResource(R.color.pantone490), fontWeight = FontWeight.Bold)
                 } else {
-                    // Mostrar la lista de usuarios usando LazyColumn
+                    // Mostrar la lista de solicitudes usando LazyColumn
                     LazyColumn(
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        items(filteresUsers) { user ->
-                            UserItem(user, navController)
+                        items(filteredApplications) { app ->
+                            ApplicationItem(app, navController)
                         }
                     }
                 }
@@ -144,26 +140,33 @@ fun UserMenuAdminScreen(navController: NavController) {
 }
 
 @Composable
-fun UserItem(user: User, navController: NavController) {
-    var userType = "Usuario"
+fun ApplicationItem(application: Application, navController: NavController) {
 
-    if (user.nivel == 1) {
-        userType = "Admin"
-    }
-
-    val userId = user.id
+    val applicationId = application.id
 
     Spacer(modifier = Modifier.height(10.dp))
     Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxWidth()
             .shadow(elevation = 10.dp, shape = RoundedCornerShape(4.dp))
             .background(colorResource(R.color.pantone465))
             .padding(16.dp)
             .clickable {
-                navController.navigate("userAdmin/$userId")
+                navController.navigate("applicationUser/$applicationId")
             }
     ) {
+        Text(
+            text = application.titulo,
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp,
+            color = colorResource(R.color.pantone490),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+
+        Spacer(modifier = Modifier.height(2.dp))
+
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -171,8 +174,31 @@ fun UserItem(user: User, navController: NavController) {
                 modifier = Modifier
                     .weight(1f)
             ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Tipo: ",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = colorResource(R.color.pantone490),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = application.tipoSolicitud,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp,
+                        color = colorResource(R.color.pantone490),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
                 Text(
-                    text = "Usuario: ${user.nombre} ${user.paterno} ${user.materno}",
+                    text = "Descripción: ",
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     color = colorResource(R.color.pantone490),
@@ -180,31 +206,33 @@ fun UserItem(user: User, navController: NavController) {
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "Correo: ${user.correo}",
-                    fontWeight = FontWeight.Bold,
+                    text = application.descripcion,
+                    fontWeight = FontWeight.SemiBold,
                     fontSize = 16.sp,
                     color = colorResource(R.color.pantone490),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = "CURP: ${user.curp}",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = colorResource(R.color.pantone490),
-                    maxLines = 1,
+                    maxLines = 3,
                     overflow = TextOverflow.Ellipsis
                 )
             }
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            Text(
-                text = userType,
-                fontWeight = FontWeight.Bold,
-                fontSize = 24.sp,
-                color = colorResource(R.color.pantone490)
-            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = application.aprobada,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = colorResource(R.color.pantone490)
+                )
+                Text(
+                    text = application.estadoSolicitud,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = colorResource(R.color.pantone490)
+                )
+            }
         }
 
     }

@@ -18,6 +18,9 @@ interface ApplicationDao {
     @Query("SELECT * FROM solicitudes")
     suspend fun getAllApplications(): List<Application>
 
+    @Query("SELECT * FROM solicitudes ORDER BY fecha DESC")
+    suspend fun getAllApplicationsByDate(): List<Application>
+
     @Query("SELECT * FROM solicitudes WHERE id = :id")
     suspend fun getApplicationById(id: Int): Application?
 
@@ -29,4 +32,7 @@ interface ApplicationDao {
 
     @Delete
     suspend fun deleteApplication(application: Application) : Int
+
+    @Query("DELETE FROM solicitudes WHERE usuario_id = :userId")
+    suspend fun deleteApplicationsByUserId(userId: Int) : Int
 }
