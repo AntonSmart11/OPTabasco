@@ -48,21 +48,25 @@ import com.example.optabasco.database.AppDatabase
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter") // Ignora la advertencia por padding innecesario en Scaffold
 @Composable
 fun LoginScreen(navController: NavController) {
+    // Estado para manejar el desplazamiento de la pantalla
     val scrollState = rememberScrollState()
 
+    // Estados para almacenar los valores ingresados en los campos de correo y contraseña
     val emailField = remember { mutableStateOf("") }
     val passwordField = remember { mutableStateOf("") }
 
-    //Crear un scope de corutina
+    // Crear un scope de corutina para operaciones asíncronas
     val coroutineScope = rememberCoroutineScope()
+
+    // Obtiene el contexto actual
     val context = LocalContext.current
 
     Scaffold(
-        //topBar = { TopAppBar(title = { Text("Prueba")})},
         content = {
+            // La columna principal que contiene todo el contenido
             Column(
                 modifier = Modifier.fillMaxSize().background(colorResource(R.color.pantone468)).verticalScroll(scrollState),
                 verticalArrangement = Arrangement.Top,
@@ -74,6 +78,7 @@ fun LoginScreen(navController: NavController) {
                 Text(text = "Iniciar Sesión", color = colorResource(R.color.pantone490), fontSize = 45.sp, fontWeight = FontWeight.ExtraBold)
                 Spacer(modifier = Modifier.height(30.dp))
 
+                // Columna que contiene los campos de texto y el botón de inicio de sesión
                 Column(modifier = Modifier.padding(horizontal = 20.dp),
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally) {
@@ -93,28 +98,32 @@ fun LoginScreen(navController: NavController) {
 
                     Spacer(modifier = Modifier.height(30.dp))
 
+                    // Botón de inicio de sesión
                     Button(
                         onClick = {
-                            //Iniciar sesión
+                            // Ejecuta la lógica de inicio de sesión al hacer clic en el botón
                             coroutineScope.launch {
+                                // Instancia del DAO de usuario
                                 val userDao = AppDatabase.getDatabase(context).userDao()
+
+                                // Obtiene el usuario con el correo proporcionado
                                 val user = userDao.getUserByEmail(emailField.value)
 
                                 if (user != null && user.contrasena == passwordField.value) {
-                                    //Mensaje
+                                    // Si el correo y la contraseña son correctos
                                     Toast.makeText(context, "Iniciado correctamente", Toast.LENGTH_LONG).show()
 
-                                    //Guarda los datos del usuario en una variable global
+                                    // Guarda la sesión del usuario en SharedPreferences
                                     saveUserSession(context, emailField.value)
 
-                                    //Navegar al dashboard, dependiendo del nivel
+                                    // Navega al dashboard correspondiente según el nivel del usuario
                                     if (user.nivel == 1) {
-                                        navController.navigate("dashboardAdmin")
+                                        navController.navigate("dashboardAdmin") // Administrador
                                     } else {
-                                        navController.navigate("dashboardUser")
+                                        navController.navigate("dashboardUser") // Usuario común
                                     }
                                 } else {
-                                    //Mensaje de error
+                                    // Si los datos son incorrectos
                                     Toast.makeText(context, "Correo o contraseña incorrectos", Toast.LENGTH_LONG).show()
                                 }
                             }

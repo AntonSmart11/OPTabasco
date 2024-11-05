@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.optabasco.R
 
+// Composable que crea un campo de selección con un menú desplegable
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomOutlinedSelectField(
@@ -38,36 +39,39 @@ fun CustomOutlinedSelectField(
     backgroundColor: Color = colorResource(R.color.pantone468),
     textColor: Color = colorResource(R.color.pantone490)
 ) {
+    // Estado para controlar si el menú desplegable está expandido o no
     var expanded by remember { mutableStateOf(false) }
 
+    // Contenedor para el campo de texto con el menú desplegable
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = {
-            expanded = !expanded
+            expanded = !expanded // Alterna entre expandir y colapsar el menú
         },
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth() // Modificador para que ocupe todo el ancho disponible
     ) {
+        // Campo de texto que muestra la opción seleccionada
         OutlinedTextField(
-            value = selectedOption.value,
-            onValueChange = { selectedOption.value = it },
+            value = selectedOption.value, // Muestra la opción seleccionada
+            onValueChange = { selectedOption.value = it }, // Cambia el valor si es editable
             label = {
                 Text(
                     label,
-                    color = colorResource(R.color.pantone468)
+                    color = backgroundColor
                 )
             },
             modifier = Modifier
                 .menuAnchor()
                 .fillMaxWidth()
-                .clickable { expanded = true },
-            enabled = enabled,
-            readOnly = true,
+                .clickable { expanded = true }, // Abre el menú al hacer clic
+            enabled = enabled, // Habilita o deshabilita el campo
+            readOnly = true, // El campo es solo de lectura
             colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = colorResource(R.color.pantone468),
-                unfocusedTextColor = colorResource(R.color.pantone468),
-                focusedBorderColor = colorResource(R.color.pantone468),
-                unfocusedBorderColor = colorResource(R.color.pantone468),
-                cursorColor = colorResource(R.color.pantone468)
+                focusedTextColor = backgroundColor,
+                unfocusedTextColor = backgroundColor,
+                focusedBorderColor = backgroundColor,
+                unfocusedBorderColor = backgroundColor,
+                cursorColor = backgroundColor
             ),
             textStyle = TextStyle(
                 color = colorResource(R.color.pantone468),
@@ -81,14 +85,15 @@ fun CustomOutlinedSelectField(
         //Menú desplegable con las opciones
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = {expanded = false},
+            onDismissRequest = {expanded = false}, // Cierra el menú cuando se hace clic fuera
             modifier = Modifier.background(backgroundColor)
         ) {
+            // Itera sobre las opciones y crea un item para cada una
             options.forEach { option ->
                 DropdownMenuItem(
                     text = { Text(option, color = textColor, fontWeight = FontWeight.Bold) },
                     onClick = {
-                        selectedOption.value = option
+                        selectedOption.value = option // Establece la opción seleccionada
                         expanded = false
                     }
                 )

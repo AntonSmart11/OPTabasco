@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -41,6 +43,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -50,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.optabasco.R
+import com.example.optabasco.views.users.clearUserSession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -61,6 +65,8 @@ fun DashboardAdminScreen(navController: NavController) {
 
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+
+    val contextDb = LocalContext.current
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -81,7 +87,33 @@ fun DashboardAdminScreen(navController: NavController) {
                     modifier = Modifier.padding(vertical = 16.dp)
                 )
 
+                Spacer(modifier = Modifier.weight(1f))
 
+                Button(
+                    onClick = {
+                        // Limpiar sesión de usuario
+                        clearUserSession(contextDb)
+
+                        // Navegar a la pantalla de login y limpiar el historial
+                        navController.navigate("login") {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    shape = RoundedCornerShape(30.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colorResource(R.color.pantone7420)
+                    )
+                ) {
+                    Text(
+                        text = "Cerrar Sesión",
+                        color = colorResource(R.color.pantone468),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     ) {

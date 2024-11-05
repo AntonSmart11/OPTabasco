@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.optabasco.R
 
+// Composable para un campo de texto de entrada con estilo y transformación visual para contraseñas
 @Composable
 fun CustomOutlinedTextField(
     valueState: MutableState<String>,
@@ -27,11 +28,13 @@ fun CustomOutlinedTextField(
     maxLines: Int = 1,
     modifier: Modifier = Modifier
 ) {
+    // Define la transformación visual para contraseñas (ocultar texto)
     val visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None
 
+    // Crea un campo de texto con borde y etiquetas personalizadas
     OutlinedTextField(
-        value = valueState.value,
-        onValueChange = { valueState.value = it },
+        value = valueState.value, // Valor del campo de texto, se obtiene del estado
+        onValueChange = { valueState.value = it },  // Cambia el valor cuando el texto cambia
         label = {
             Text(
                 label,
@@ -46,14 +49,14 @@ fun CustomOutlinedTextField(
             unfocusedBorderColor = colorResource(R.color.pantone468),
             cursorColor = colorResource(R.color.pantone468),
         ),
-        visualTransformation = visualTransformation,
+        visualTransformation = visualTransformation, // Define si el texto es transformado (como una contraseña)
         textStyle = TextStyle(
             color = colorResource(R.color.pantone468),
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
         ),
-        enabled = enabled,
+        enabled = enabled, // Define si el campo es interactuable
         shape = RoundedCornerShape(16.dp),
         maxLines = maxLines,
         modifier = modifier.fillMaxWidth()

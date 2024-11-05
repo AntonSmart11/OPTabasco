@@ -3,6 +3,7 @@ package com.example.optabasco.database.models
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
+// Define una entidad de base de datos llamada 'usuarios'
 @Entity(tableName = "usuarios")
 data class User(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,

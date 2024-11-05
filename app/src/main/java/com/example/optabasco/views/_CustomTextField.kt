@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.optabasco.R
 
+// Composable de campo personalizado
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomTextField(
@@ -31,11 +32,13 @@ fun CustomTextField(
     enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
+    // Determina si se debe mostrar como una contraseña (máscara de texto) o no
     val visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None
 
+    // Componente TextField para ingreso de texto
     TextField(
-        value = valueState.value,
-        onValueChange = { valueState.value = it },
+        value = valueState.value, // El valor actual del campo de texto
+        onValueChange = { valueState.value = it }, // Actualiza el valor cuando el usuario lo cambia
         label = { Text(label, color = colorResource(R.color.pantone468))},
         modifier = modifier
             .fillMaxWidth()
@@ -50,14 +53,14 @@ fun CustomTextField(
                 disabledContainerColor = Color.Gray,
                 disabledIndicatorColor = Color.Gray,
         ),
-        visualTransformation = visualTransformation,
+        visualTransformation = visualTransformation, // Transforma la visualización del texto si es una contraseña
         textStyle = TextStyle(
             color = colorResource(R.color.pantone468),
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
         ),
-        enabled = enabled,
+        enabled = enabled, // Controla si el campo es interactivo
         shape = RoundedCornerShape(16.dp),
         maxLines = 1
     )

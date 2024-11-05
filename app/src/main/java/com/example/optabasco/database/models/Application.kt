@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 
+// Define una entidad de base de datos llamada 'solicitudes', que representa una solicitud realizada por un usuario, con una llave foránea
 @Entity(
     tableName = "solicitudes",
     foreignKeys = [

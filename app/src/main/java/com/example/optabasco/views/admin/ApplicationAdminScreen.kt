@@ -1,10 +1,8 @@
-package com.example.optabasco.views.users
+package com.example.optabasco.views.admin
 
-import android.icu.text.SimpleDateFormat
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,11 +10,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -24,40 +20,35 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import com.example.optabasco.R
 import com.example.optabasco.database.AppDatabase
 import com.example.optabasco.database.models.Application
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import com.example.optabasco.views.CustomOutlinedSelectField
+import com.example.optabasco.views.CustomSelectField
+import com.example.optabasco.views.saveUserSession
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
+fun ApplicationAdminScreen(navController: NavController, applicationId: Int) {
     val scrollState = rememberScrollState()
 
     val context = navController.context
@@ -66,6 +57,7 @@ fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
     val coroutineScope = rememberCoroutineScope()
 
     val applicationDao = AppDatabase.getDatabase(contextDb).applicationDao()
+    val userDao = AppDatabase.getDatabase(contextDb).userDao()
 
     val userId = remember { mutableStateOf(0) }
     val title = remember { mutableStateOf("") }
@@ -75,10 +67,35 @@ fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
     val typeApplication = remember { mutableStateOf("") }
     val description = remember { mutableStateOf("") }
     val date = remember { mutableStateOf("") }
+    val dateFull = remember { mutableStateOf("") }
     val approved = remember { mutableStateOf("") }
     val statusApplication = remember { mutableStateOf("") }
 
+    val name = remember { mutableStateOf("") }
+    val lastPatern = remember { mutableStateOf("") }
+    val lastMatern = remember { mutableStateOf("") }
+    val email = remember { mutableStateOf("") }
+    val number = remember { mutableStateOf("") }
+    val curp = remember { mutableStateOf("") }
+    val levelUser = remember { mutableStateOf(0) }
+
     val showDialogDelete = remember { mutableStateOf(false) }
+
+    val approvedField = remember { mutableStateOf("") }
+    val statusApplicationField = remember { mutableStateOf("") }
+
+    val enabledStatusField = remember { mutableStateOf(false) }
+
+    if (approvedField.value != "Aprobado") {
+        enabledStatusField.value = false
+        statusApplicationField.value = "No confirmada"
+    } else {
+        enabledStatusField.value = true
+
+        if(statusApplicationField.value == "No confirmada") {
+            statusApplicationField.value = "En proceso"
+        }
+    }
 
     LaunchedEffect(applicationId) {
         val applicationSelected = applicationId.let { applicationDao.getApplicationById(it) }
@@ -92,14 +109,33 @@ fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
             typeApplication.value = app.tipoSolicitud
             description.value = app.descripcion
             date.value = app.fecha.substring(0, 10)
+            dateFull.value = app.fecha
             approved.value = app.aprobada
             statusApplication.value = app.estadoSolicitud
 
             if (app.calle == "") {
                 street.value = "Sin nombre"
             }
+
+            approvedField.value = approved.value
+            statusApplicationField.value = statusApplication.value
+        }
+
+        val userSelected = userDao.getUserById(userId.value)
+
+        userSelected?.let { user ->
+            name.value = user.nombre
+            lastPatern.value = user.paterno
+            lastMatern.value = user.materno
+            email.value = user.correo
+            number.value = user.telefono
+            curp.value = user.curp
+            levelUser.value = user.nivel
         }
     }
+
+    val optionsApproved = listOf("En espera","No aprobado", "Aprobado")
+    val optionsStatus = listOf("No confirmada", "En proceso", "Sin éxito", "Concluida")
 
     Scaffold(
         topBar = { CenterAlignedTopAppBar(
@@ -120,7 +156,7 @@ fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
         )
 
         },
-        content = { paddingValues ->
+        content = {paddingValues ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -131,6 +167,7 @@ fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Spacer(Modifier.height(10.dp))
+
                 Text(
                     text = title.value,
                     color = colorResource(R.color.pantone490),
@@ -150,7 +187,7 @@ fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
                 Spacer(Modifier.height(20.dp))
 
                 Text(
-                    text = "Dirección",
+                    text = "Usuario",
                     color = colorResource(R.color.pantone490),
                     fontSize = 30.sp,
                     fontWeight = FontWeight.ExtraBold
@@ -171,13 +208,132 @@ fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
                             .fillMaxWidth()
                     ) {
                         Text(
-                            text = "Calle: ",
+                            text = "Nombre del usuario: ",
                             color = colorResource(R.color.pantone490),
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 16.sp
                         )
                         Text(
-                            text = street.value,
+                            text = "${name.value} ${lastPatern.value} ${lastMatern.value}",
+                            color = colorResource(R.color.pantone490),
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 16.sp
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(5.dp))
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Correo electrónico: ",
+                            color = colorResource(R.color.pantone490),
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 16.sp
+                        )
+                        Text(
+                            text = email.value,
+                            color = colorResource(R.color.pantone490),
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 16.sp
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(5.dp))
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Número telefónico: ",
+                            color = colorResource(R.color.pantone490),
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 16.sp
+                        )
+                        Text(
+                            text = number.value,
+                            color = colorResource(R.color.pantone490),
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 16.sp
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(5.dp))
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "CURP: ",
+                            color = colorResource(R.color.pantone490),
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 16.sp
+                        )
+                        Text(
+                            text = curp.value,
+                            color = colorResource(R.color.pantone490),
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 16.sp
+                        )
+                    }
+
+                }
+
+                Spacer(Modifier.height(20.dp))
+
+                Text(
+                    text = "Solicitud",
+                    color = colorResource(R.color.pantone490),
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.ExtraBold
+                )
+
+                Spacer(Modifier.height(10.dp))
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(elevation = 10.dp)
+                        .background(colorResource(R.color.pantone465))
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Título: ",
+                            color = colorResource(R.color.pantone490),
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 16.sp
+                        )
+                        Text(
+                            text = title.value,
+                            color = colorResource(R.color.pantone490),
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 16.sp
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(5.dp))
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Municipio: ",
+                            color = colorResource(R.color.pantone490),
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 16.sp
+                        )
+                        Text(
+                            text = municipality.value,
                             color = colorResource(R.color.pantone490),
                             fontWeight = FontWeight.Normal,
                             fontSize = 16.sp
@@ -211,39 +367,21 @@ fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
                             .fillMaxWidth()
                     ) {
                         Text(
-                            text = "Municipio: ",
+                            text = "Calle: ",
                             color = colorResource(R.color.pantone490),
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 16.sp
                         )
                         Text(
-                            text = municipality.value,
+                            text = street.value,
                             color = colorResource(R.color.pantone490),
                             fontWeight = FontWeight.Normal,
                             fontSize = 16.sp
                         )
                     }
-                }
 
-                Spacer(Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(5.dp))
 
-                Text(
-                    text = "Datos",
-                    color = colorResource(R.color.pantone490),
-                    fontSize = 30.sp,
-                    fontWeight = FontWeight.ExtraBold
-                )
-
-                Spacer(Modifier.height(10.dp))
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .shadow(elevation = 10.dp)
-                        .background(colorResource(R.color.pantone465))
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -281,166 +419,101 @@ fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
                             fontSize = 16.sp
                         )
                     }
-
                 }
 
-                Spacer(modifier = Modifier.height(30.dp))
+                Spacer(Modifier.height(20.dp))
 
                 Text(
-                    text = approved.value,
+                    text = "Seguimiento",
                     color = colorResource(R.color.pantone490),
-                    fontSize = 25.sp,
+                    fontSize = 30.sp,
                     fontWeight = FontWeight.ExtraBold
                 )
 
-                Text(
-                    text = statusApplication.value,
-                    color = colorResource(R.color.pantone490),
-                    fontSize = 25.sp,
-                    fontWeight = FontWeight.ExtraBold
-                )
+                Spacer(Modifier.height(10.dp))
 
-                Spacer(modifier = Modifier.height(25.dp))
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CustomSelectField(
+                        label = "Confirma si se aprueba la solicitud",
+                        selectOption = approvedField.value,
+                        options = optionsApproved,
+                        onOptionSelected = { approvedField.value = it }
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    CustomSelectField(
+                        label = "Estado de la solicitud",
+                        selectOption = statusApplicationField.value,
+                        options = optionsStatus,
+                        onOptionSelected = { statusApplicationField.value = it },
+                        enabled = enabledStatusField.value
+                    )
+                }
 
                 Button(
                     onClick = {
-                        showDialogDelete.value = true
+                        if (approvedField.value != "Aprobado") {
+                            enabledStatusField.value = false
+                            statusApplicationField.value = "No confirmada"
+                        } else {
+                            enabledStatusField.value = true
+
+                            if(statusApplicationField.value == "No confirmada") {
+                                statusApplicationField.value = "En proceso"
+                            }
+                        }
+
+                        val editApplication = Application(
+                            applicationId,
+                            userId.value,
+                            title.value,
+                            street.value,
+                            ranch.value,
+                            municipality.value,
+                            typeApplication.value,
+                            description.value,
+                            dateFull.value,
+                            approvedField.value,
+                            statusApplicationField.value
+                        )
+
+                        coroutineScope.launch {
+                            val rowsAffected = applicationDao.updateApplication(editApplication)
+
+                            if (rowsAffected > 0) {
+                                //Mostrar mensaje
+                                Toast.makeText(context, "Actualizado correctamente", Toast.LENGTH_LONG).show()
+                            } else {
+                                //Mostrar mensaje
+                                Toast.makeText(context, "Error al actualizar", Toast.LENGTH_LONG).show()
+                            }
+                        }
+
+
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 70.dp)
+                        .padding(horizontal = 90.dp)
+                        .padding(bottom = 32.dp)
                         .height(50.dp),
                     shape = RoundedCornerShape(30.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = colorResource(R.color.pantone7420)
+                        containerColor = colorResource(R.color.pantone465)
                     )
                 ) {
                     Text(
-                        text = "Eliminar solicitud",
-                        color = colorResource(R.color.pantone468),
+                        text = "Guardar",
+                        color = colorResource(R.color.pantone490),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     )
-                }
-            }
-        }
-
-    )
-
-    if (showDialogDelete.value) {
-        DeleteApplicationDialog(
-            onDismiss = { showDialogDelete.value = false },
-            applicationId,
-            navController
-        )
-    }
-}
-
-// Alert Dialog Solicitud
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DeleteApplicationDialog(
-    onDismiss: () -> Unit,
-    applicationId: Int,
-    navController: NavController
-) {
-
-    val contextDb = LocalContext.current
-    val database = AppDatabase.getDatabase(contextDb)
-    val applicationDao = database.applicationDao()
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            dismissOnClickOutside = true
-        ),
-
-        // Modificar el contenido del diálogo con Surface para cambiar colores
-        content = {
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = colorResource(R.color.pantone490),
-                modifier = Modifier.padding(16.dp),
-                shadowElevation = 1.dp
-            ) {
-                Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "Eliminar solicitud",
-                        color = colorResource(R.color.pantone468),
-                        fontSize = 18.sp,
-                        textAlign = TextAlign.Center,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-
-                    Text(
-                        text = "¿Estás seguro de que deseas eliminar esta solicitud?",
-                        color = colorResource(R.color.pantone468),
-                        fontSize = 16.sp,
-                        textAlign = TextAlign.Center,
-                        fontWeight = FontWeight.Normal,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        TextButton(
-                            onClick = onDismiss,
-                            colors = ButtonDefaults.textButtonColors(
-                                containerColor = colorResource(R.color.pantone7420),
-                                contentColor = colorResource(R.color.pantone7420)
-                            ),
-                            modifier = Modifier.width(120.dp)
-                        ) {
-                            Text(
-                                "Cancelar",
-                                color = colorResource(R.color.pantone468),
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        TextButton(
-                            onClick = {
-                                // Llamar a la función de cambiar contraseña
-                                CoroutineScope(Dispatchers.IO).launch {
-                                    val application = applicationDao.getApplicationById(applicationId)
-
-                                    if (application != null) {
-                                        val deleted = applicationDao.deleteApplication(application)
-
-                                        if (deleted > 0) {
-                                            withContext(Dispatchers.Main) {
-                                                Toast.makeText(contextDb, "Solicitud eliminada exitosamente", Toast.LENGTH_LONG).show()
-                                                onDismiss()
-
-                                                // Redirigir a menú
-                                                navController.popBackStack()
-                                            }
-
-                                        } else {
-                                            Toast.makeText(contextDb, "Hubo un error...", Toast.LENGTH_LONG).show()
-                                        }
-                                    }
-
-                                }
-                            },
-                            colors = ButtonDefaults.textButtonColors(
-                                containerColor = colorResource(R.color.pantone1805),
-                                contentColor = colorResource(R.color.pantone1805)
-                            ),
-                            modifier = Modifier.width(120.dp)
-                        ) {
-                            Text(
-                                "Eliminar",
-                                color = colorResource(R.color.pantone468),
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
                 }
             }
         }

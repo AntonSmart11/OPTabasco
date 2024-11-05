@@ -57,17 +57,23 @@ import kotlinx.coroutines.withContext
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(navController: NavController) {
+    // Inicializa el estado del scroll para permitir desplazamiento en la pantalla
     val scrollState = rememberScrollState()
 
+    // Obtiene el contexto desde el controlador de navegación
     val context = navController.context
     val contextDb = LocalContext.current
 
+    // Crea un ámbito de corutinas para operaciones asincrónicas
     val coroutineScope = rememberCoroutineScope()
 
+    // Obtiene el correo del usuario desde la sesión almacenada
     val userEmail = getUserSession(context)
 
+    // Obtiene el DAO (Data Access Object) de la base de datos para acceder a los usuarios
     val userDao = AppDatabase.getDatabase(contextDb).userDao()
 
+    // Inicializa los campos de texto de la UI para almacenar los valores ingresados por el usuario
     val nameField = remember { mutableStateOf("") }
     val lastPaternField = remember { mutableStateOf("") }
     val lastMaternField = remember { mutableStateOf("") }
@@ -78,13 +84,16 @@ fun ProfileScreen(navController: NavController) {
     val levelUser = remember { mutableStateOf(2) }
     val idUser = remember { mutableStateOf(0) }
 
+    // Estados para controlar si las ventanas emergentes deben ser visibles
     val showDialogPassword = remember { mutableStateOf(false) }
     val showDialogDelete = remember { mutableStateOf(false) }
 
+    // Recupera los datos del usuario desde la base de datos si el correo está presente
     LaunchedEffect(userEmail) {
-        val userLoggin = userEmail?.let { userDao.getUserByEmail(it) }
+        val userLoggin = userEmail?.let { userDao.getUserByEmail(it) } // Busca el usuario por correo
 
         userLoggin?.let { user ->
+            // Asigna los valores del usuario a los campos
             nameField.value = user.nombre
             lastPaternField.value = user.paterno
             lastMaternField.value = user.materno
@@ -97,6 +106,7 @@ fun ProfileScreen(navController: NavController) {
         }
     }
 
+    // Estructura la pantalla con la barra superior, los campos de formulario y botones
     Scaffold(
         topBar = { CenterAlignedTopAppBar(
             title = { Text("") },
@@ -105,6 +115,7 @@ fun ProfileScreen(navController: NavController) {
                 titleContentColor = colorResource(R.color.pantone468)
             ),
             navigationIcon = {
+                // Icono de navegación para volver atrás
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(
                         painter = painterResource(R.drawable.arrow_back),
@@ -135,6 +146,7 @@ fun ProfileScreen(navController: NavController) {
 
                 Spacer(Modifier.height(20.dp))
 
+                // Campos de texto personalizados para editar los datos del perfil
                 CustomTextField(
                     valueState = nameField,
                     label = "Nombre(s)"
@@ -172,6 +184,7 @@ fun ProfileScreen(navController: NavController) {
                 )
                 Spacer(modifier = Modifier.height(20.dp))
 
+                // Botón para guardar los cambios
                 Button(
                     onClick = {
                         coroutineScope.launch {
@@ -185,6 +198,7 @@ fun ProfileScreen(navController: NavController) {
                             )
 
                             if (validationError == null) {
+                                // Si no hay error, actualiza el usuario
                                 val editUser = User(
                                     id = idUser.value,
                                     nombre = nameField.value,
@@ -199,7 +213,7 @@ fun ProfileScreen(navController: NavController) {
 
                                 updateUser(context, editUser)
                             } else {
-                                // Mostrar el mensaje de error
+                                // Si hay error, muestra un mensaje de validación
                                 Toast.makeText(context, validationError, Toast.LENGTH_LONG).show()
                             }
                         }
@@ -223,6 +237,7 @@ fun ProfileScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(20.dp))
 
+                // Botón para cambiar la contraseña
                 Button(
                     onClick = {
                         showDialogPassword.value = true
@@ -244,6 +259,7 @@ fun ProfileScreen(navController: NavController) {
                     )
                 }
 
+                // Botón para eliminar la cuenta, solo visible para usuarios con nivel 2
                 if (levelUser.value == 2) {
                     Spacer(modifier = Modifier.height(20.dp))
 
@@ -272,6 +288,7 @@ fun ProfileScreen(navController: NavController) {
         }
     )
 
+    // Ventana para cambiar la contraseña
     if (showDialogPassword.value) {
         ChangePasswordDialog(
             onDismiss = { showDialogPassword.value = false },
@@ -279,6 +296,7 @@ fun ProfileScreen(navController: NavController) {
         )
     }
 
+    // Ventana para eliminar la cuenta
     if (showDialogDelete.value) {
         DeleteAccountDialog(
             onDismiss = { showDialogDelete.value = false },
@@ -288,18 +306,26 @@ fun ProfileScreen(navController: NavController) {
     }
 }
 
+// Función para guardar la sesión del usuario en SharedPreferences
 fun saveUserSession(context: Context, userEmail: String) {
+    // Obtenemos las SharedPreferences del contexto
     val sharedPref: SharedPreferences = context.getSharedPreferences("UserSession", Context.MODE_PRIVATE)
     val editor = sharedPref.edit()
+    // Guardamos el correo electrónico del usuario en las preferencias
     editor.putString("userEmail", userEmail)
+    // Aplicamos los cambios en las SharedPreferences
     editor.apply()
 }
 
+// Función para obtener la sesión del usuario desde SharedPreferences
 fun getUserSession(context: Context): String? {
+    // Obtenemos las SharedPreferences del contexto
     val sharedPref: SharedPreferences = context.getSharedPreferences("UserSession", Context.MODE_PRIVATE)
+    // Recuperamos el correo electrónico guardado, o un string vacío si no existe
     return sharedPref.getString("userEmail", "")
 }
 
+// Función para validar los campos al crear un nuevo usuario
 fun validateFieldsCreateUser(
     name: String,
     lastPatern: String,
@@ -308,7 +334,7 @@ fun validateFieldsCreateUser(
     number: String,
     curp: String,
 ): String? {
-    //Validar que ningún campo esté vacío
+    // Validar que ningún campo esté vacío
     if (
         name.isBlank() ||
         lastPatern.isBlank() ||
@@ -320,25 +346,30 @@ fun validateFieldsCreateUser(
         return "Todos los campos deben estar llenos"
     }
 
+    // Validar que el número de teléfono tenga 10 dígitos
     if (number.length != 10) {
         return "El número de teléfono debe tener 10 dígitos"
     }
 
+    // Validar que la CURP tenga 18 caracteres
     if (curp.length != 18) {
         return "La CURP debe tener 18 caracteres"
     }
 
+    // Si todo está bien, retornar null (sin errores)
     return null
 }
 
+// Función suspendida para actualizar los datos del usuario
 suspend fun updateUser(context: Context, user: User) {
+    // Obtener la instancia de la base de datos y el DAO de usuario
     val database = AppDatabase.getDatabase(context)
     val userDao = database.userDao()
 
     // Verificar si existe un usuario con el mismo correo, excluyendo al usuario actual
     val existingUserByEmail = userDao.getUserByEmail(user.correo)
     if (existingUserByEmail != null && existingUserByEmail.id != user.id) {
-        // El correo está en uso por otro usuario
+        // Si el correo ya está en uso por otro usuario
         Toast.makeText(context, "El correo ya está en uso por otro usuario", Toast.LENGTH_LONG).show()
         return
     }
@@ -346,41 +377,45 @@ suspend fun updateUser(context: Context, user: User) {
     // Verificar si existe un usuario con la misma CURP, excluyendo al usuario actual
     val existingUserByCurp = userDao.getUserByCurp(user.curp)
     if (existingUserByCurp != null && existingUserByCurp.id != user.id) {
-        // La CURP está en uso por otro usuario
+        // Si la CURP ya está en uso por otro usuario
         Toast.makeText(context, "La CURP ya está en uso por otro usuario", Toast.LENGTH_LONG).show()
         return
     }
 
-    // Si no hay duplicados, actualiza el usuario en la base de datos
+    // Si no hay duplicados, actualizar el usuario en la base de datos
     val rowsAffected = userDao.updateUser(user)
 
+    // Verificar si la actualización fue exitosa
     if (rowsAffected > 0) {
         //Guarda los datos del usuario en una variable global
         saveUserSession(context, user.correo)
 
-        //Mostrar mensaje
+        // Mostrar un mensaje de éxito
         Toast.makeText(context, "Actualizado correctamente", Toast.LENGTH_LONG).show()
     } else {
-        //Mostrar mensaje
+        // Si hubo un error al actualizar, se muestra un mensaje de error
         Toast.makeText(context, "Error al actualizar", Toast.LENGTH_LONG).show()
     }
 }
 
-//Alert Dialog
+// Función composable para mostrar el diálogo de cambio de contraseña
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChangePasswordDialog(
     onDismiss: () -> Unit,
     userId: MutableState<Int>
 ) {
+    // Campos para las contraseñas
     val oldPasswordField = remember { mutableStateOf("") }
     val newPasswordField = remember { mutableStateOf("") }
     val confirmPasswordField = remember { mutableStateOf("") }
 
+    // Obtener el contexto de la base de datos y el DAO de usuario
     val contextDb = LocalContext.current
     val database = AppDatabase.getDatabase(contextDb)
     val userDao = database.userDao()
 
+    // Mostrar el cuadro
     AlertDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(
@@ -408,6 +443,7 @@ fun ChangePasswordDialog(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
+                    // Campos para las contraseñas
                     CustomOutlinedTextField(
                         oldPasswordField,
                         "Antigua contraseña",
@@ -432,6 +468,7 @@ fun ChangePasswordDialog(
 
                     Spacer(modifier = Modifier.height(20.dp))
 
+                    // Botones de acción
                     Row(
                         horizontalArrangement = Arrangement.Center,
                         modifier = Modifier.fillMaxWidth()
@@ -453,9 +490,10 @@ fun ChangePasswordDialog(
 
                         Spacer(modifier = Modifier.width(8.dp))
 
+                        // Botón para guardar cambios
                         TextButton(
                             onClick = {
-                                // Llamar a la función de cambiar contraseña
+                                // Llamada a la función de cambio de contraseña en un hilo de fondo
                                 CoroutineScope(Dispatchers.IO).launch {
                                     val result = AuthService(userDao = userDao).changePassword(
                                         userId.value,
@@ -464,6 +502,7 @@ fun ChangePasswordDialog(
                                         confirmPasswordField.value
                                     )
 
+                                    // Mostrar el resultado en el hilo principal
                                     withContext(Dispatchers.Main) {
                                         if (result == null) {
                                             Toast.makeText(contextDb, "Contraseña actualizada correctamente", Toast.LENGTH_LONG).show()
@@ -494,6 +533,7 @@ fun ChangePasswordDialog(
     )
 }
 
+// Función composable para mostrar el cuadro de eliminación de cuenta
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeleteAccountDialog(
@@ -501,11 +541,12 @@ fun DeleteAccountDialog(
     userId: MutableState<Int>,
     navController: NavController
 ) {
-
+    // Obtener el contexto de la base de datos y el DAO de usuario
     val contextDb = LocalContext.current
     val database = AppDatabase.getDatabase(contextDb)
     val userDao = database.userDao()
 
+    // Mostrar el cuadro
     AlertDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(
@@ -530,6 +571,7 @@ fun DeleteAccountDialog(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
+                    // Mensaje de confirmación
                     Text(
                         text = "¿Estás seguro de que deseas eliminar esta cuenta? Se eliminarán las solicitudes y ya no podrás volver a inicar sesión.",
                         color = colorResource(R.color.pantone468),
@@ -539,10 +581,12 @@ fun DeleteAccountDialog(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
+                    // Botones de acción
                     Row(
                         horizontalArrangement = Arrangement.Center,
                         modifier = Modifier.fillMaxWidth()
                     ) {
+                        // Botón para cancelar
                         TextButton(
                             onClick = onDismiss,
                             colors = ButtonDefaults.textButtonColors(
@@ -560,9 +604,10 @@ fun DeleteAccountDialog(
 
                         Spacer(modifier = Modifier.width(8.dp))
 
+                        // Botón para eliminar cuenta
                         TextButton(
                             onClick = {
-                                // Llamar a la función de cambiar contraseña
+                                // Llamada a la función de eliminación de cuenta en un hilo de fondo
                                 CoroutineScope(Dispatchers.IO).launch {
                                     val user = userDao.getUserById(userId.value)
 
@@ -582,6 +627,7 @@ fun DeleteAccountDialog(
                                             }
 
                                         } else {
+                                            // Mensaje de validación por si hubo un error
                                             Toast.makeText(contextDb, "Hubo un error...", Toast.LENGTH_LONG).show()
                                         }
                                     }
