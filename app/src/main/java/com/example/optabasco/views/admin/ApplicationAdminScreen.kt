@@ -1,6 +1,9 @@
 package com.example.optabasco.views.admin
 
+import android.content.Context
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,9 +13,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -20,10 +25,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,16 +43,22 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import com.example.optabasco.R
 import com.example.optabasco.database.AppDatabase
 import com.example.optabasco.database.models.Application
 import com.example.optabasco.views.CustomOutlinedSelectField
 import com.example.optabasco.views.CustomSelectField
+import com.example.optabasco.views.generatePdf
 import com.example.optabasco.views.saveUserSession
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,6 +69,14 @@ fun ApplicationAdminScreen(navController: NavController, applicationId: Int) {
     val contextDb = LocalContext.current
 
     val coroutineScope = rememberCoroutineScope()
+
+    val pdfLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/pdf")
+    ) { uri ->
+        uri?.let {
+            generatePdf(context, it)
+        }
+    }
 
     val applicationDao = AppDatabase.getDatabase(contextDb).applicationDao()
     val userDao = AppDatabase.getDatabase(contextDb).userDao()
@@ -514,6 +536,175 @@ fun ApplicationAdminScreen(navController: NavController, applicationId: Int) {
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     )
+                }
+
+                Button(
+                    onClick = {
+                        pdfLauncher.launch("solicitud_${title.value}.pdf") // Lanza el Intent para seleccionar ubicación
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 90.dp)
+                        .padding(bottom = 32.dp)
+                        .height(50.dp),
+                    shape = RoundedCornerShape(30.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colorResource(R.color.pantone465)
+                    )
+                ) {
+                    Text(
+                        text = "Generar PDF",
+                        color = colorResource(R.color.pantone490),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Button(
+                    onClick = {
+                        showDialogDelete.value = true
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 90.dp)
+                        .padding(bottom = 32.dp)
+                        .height(50.dp),
+                    shape = RoundedCornerShape(30.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colorResource(R.color.pantone1805)
+                    )
+                ) {
+                    Text(
+                        text = "Eliminar",
+                        color = colorResource(R.color.pantone468),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+    )
+
+    if (showDialogDelete.value) {
+        DeleteApplicationDialog(
+            onDismiss = { showDialogDelete.value = false },
+            applicationId,
+            navController
+        )
+    }
+}
+
+// Función composable para mostrar el cuadro de eliminación de una solicitud
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DeleteApplicationDialog(
+    onDismiss: () -> Unit,
+    applciationId: Int,
+    navController: NavController
+) {
+    // Obtener el contexto de la base de datos y el DAO de usuario
+    val contextDb = LocalContext.current
+    val database = AppDatabase.getDatabase(contextDb)
+    val applicationDao = database.applicationDao()
+
+    // Mostrar el cuadro
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            dismissOnClickOutside = true
+        ),
+
+        // Modificar el contenido del diálogo con Surface para cambiar colores
+        content = {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = colorResource(R.color.pantone490),
+                modifier = Modifier.padding(16.dp),
+                shadowElevation = 1.dp
+            ) {
+                Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Eliminar solicitud",
+                        color = colorResource(R.color.pantone468),
+                        fontSize = 18.sp,
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    // Mensaje de confirmación
+                    Text(
+                        text = "¿Estás seguro de que deseas eliminar esta solicitud?",
+                        color = colorResource(R.color.pantone468),
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Normal,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    // Botones de acción
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        // Botón para cancelar
+                        TextButton(
+                            onClick = onDismiss,
+                            colors = ButtonDefaults.textButtonColors(
+                                containerColor = colorResource(R.color.pantone7420),
+                                contentColor = colorResource(R.color.pantone7420)
+                            ),
+                            modifier = Modifier.width(120.dp)
+                        ) {
+                            Text(
+                                "Cancelar",
+                                color = colorResource(R.color.pantone468),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        // Botón para eliminar cuenta
+                        TextButton(
+                            onClick = {
+                                // Llamada a la función de eliminación de cuenta en un hilo de fondo
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    val application = applicationDao.getApplicationById(applciationId)
+
+                                    if (application != null) {
+                                        val deleted = applicationDao.deleteApplication(application)
+
+                                        if (deleted > 0) {
+                                            withContext(Dispatchers.Main) {
+                                                Toast.makeText(contextDb, "Solicitud eliminada exitosamente", Toast.LENGTH_LONG).show()
+                                                onDismiss()
+
+                                                // Redirigir al menu anterior
+                                                navController.popBackStack()
+                                            }
+
+                                        } else {
+                                            // Mensaje de validación por si hubo un error
+                                            Toast.makeText(contextDb, "Hubo un error...", Toast.LENGTH_LONG).show()
+                                        }
+                                    }
+
+                                }
+                            },
+                            colors = ButtonDefaults.textButtonColors(
+                                containerColor = colorResource(R.color.pantone1805),
+                                contentColor = colorResource(R.color.pantone1805)
+                            ),
+                            modifier = Modifier.width(120.dp)
+                        ) {
+                            Text(
+                                "Eliminar",
+                                color = colorResource(R.color.pantone468),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
             }
         }
