@@ -47,8 +47,10 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(navController: NavController) {
+    // Variable para almacenar el estado de desplazamiento de la pantalla
     val scrollState = rememberScrollState()
 
+    // Variables para almacenar los valores de los campos del formulario de registro
     val nameField = remember { mutableStateOf("") }
     val lastPaternField = remember { mutableStateOf("") }
     val lastMaternField = remember { mutableStateOf("") }
@@ -58,17 +60,21 @@ fun RegisterScreen(navController: NavController) {
     val passwordField = remember { mutableStateOf("") }
     val repeatPasswordField = remember { mutableStateOf("") }
 
-    //Crear un scope de corutina
+    // Crear un alcance de corrutina para operaciones asincrónicas
     val coroutineScope = rememberCoroutineScope()
+
+    // Obtiene el contexto de la actividad actual
     val context = LocalContext.current
 
     Scaffold(
+        // Define la barra superior de la pantalla de registro
         topBar = { CenterAlignedTopAppBar(
             title = { Text("OP Tabasco", color = colorResource(R.color.pantone468), fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center) },
             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                 containerColor = colorResource(R.color.pantone490),
                 titleContentColor = colorResource(R.color.pantone468)
             ),
+            // Botón de navegación para regresar a la pantalla anterior
             navigationIcon = {
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(
@@ -79,6 +85,7 @@ fun RegisterScreen(navController: NavController) {
                 }
             }
         )},
+        // Contenido principal de la pantalla
         content = { paddingValues ->
             Column(
                 modifier = Modifier
@@ -93,6 +100,7 @@ fun RegisterScreen(navController: NavController) {
                 Text(text = "Registrate", color = colorResource(R.color.pantone490), fontSize = 45.sp, fontWeight = FontWeight.ExtraBold)
                 Spacer(modifier = Modifier.height(30.dp))
 
+                // Campos de texto personalizados para capturar datos de usuario
                 Column(
                     modifier = Modifier.padding(horizontal = 20.dp),
                     verticalArrangement = Arrangement.Top,
@@ -149,8 +157,10 @@ fun RegisterScreen(navController: NavController) {
                     )
                     Spacer(modifier = Modifier.height(30.dp))
 
+                    // Botón de registro
                     Button(
                         onClick = {
+                            // Validación de los campos antes de crear el usuario
                             val validationError = validateFieldsCreateUser(
                                 name = nameField.value,
                                 lastPatern = lastPaternField.value,
@@ -162,6 +172,7 @@ fun RegisterScreen(navController: NavController) {
                                 repeatPassword = repeatPasswordField.value
                             )
 
+                            // Si no hay errores, insertar el usuario en la base de datos
                             if (validationError == null) {
                                 coroutineScope.launch {
                                     //Llamar a la función de inserción dentro de una corutina
@@ -178,7 +189,7 @@ fun RegisterScreen(navController: NavController) {
                                     insertUser(context, user, navController)
                                 }
                             } else {
-                                // Mostrar el mensaje de error
+                                // Mostrar error de validación al usuario
                                 Toast.makeText(context, validationError, Toast.LENGTH_LONG).show()
                             }
                         },
@@ -201,6 +212,7 @@ fun RegisterScreen(navController: NavController) {
 
                     Spacer(modifier = Modifier.height(20.dp))
 
+                    // Texto con opciones para iniciar sesión si ya se tiene cuenta
                     Text(text = "¿Tienes cuenta?", color = colorResource(R.color.pantone465), fontSize = 20.sp, fontWeight = FontWeight.Normal, textAlign = TextAlign.Center)
                     Spacer(modifier = Modifier.height(5.dp))
                     Text(text = "Inicia sesión", color = colorResource(R.color.pantone465), fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center, modifier = Modifier.clickable {
@@ -212,6 +224,7 @@ fun RegisterScreen(navController: NavController) {
     )
 }
 
+// Función para validar los campos del formulario de registro de usuario
 fun validateFieldsCreateUser(
     name: String,
     lastPatern: String,
@@ -222,7 +235,7 @@ fun validateFieldsCreateUser(
     password: String,
     repeatPassword: String
 ): String? {
-    //Validar que ningún campo esté vacío
+    // Validar que ningún campo esté vacío
     if (
         name.isBlank() ||
         lastPatern.isBlank() ||
@@ -251,31 +264,35 @@ fun validateFieldsCreateUser(
     return null
 }
 
+// Función para insertar el usuario en la base de datos
 suspend fun insertUser(context: Context, user: User, navController: NavController) {
+    // Obtener instancia de la base de datos
     val database = AppDatabase.getDatabase(context)
+
+    // Acceso al DAO de usuario
     val userDao = database.userDao()
 
-    // Verificar si ya existe un usuario con la misma CURP o correo
+    // Verificar si ya existe un usuario con el mismo CURP o correo
     val existingUserByCurp = userDao.getUserByCurp(user.curp)
     val existingUserByEmail = userDao.getUserByEmail(user.correo)
 
     when {
         existingUserByCurp != null -> {
-            // Mostrar el mensaje
+            // Mostrar mensaje de error si el CURP ya existe
             Toast.makeText(context, "Ya existe un usuario con esa CURP", Toast.LENGTH_LONG).show()
         }
         existingUserByEmail != null -> {
-            // Mostrar el mensaje
+            // Mostrar mensaje de error si el correo ya existe
             Toast.makeText(context, "Ya existe un usuario con ese correo electrónico", Toast.LENGTH_LONG).show()
         }
         else -> {
-            //Inserta el usuario a la base de datos
+            // Inserta el usuario en la base de datos y muestra un mensaje de éxito
             userDao.insert(user)
 
             // Mostrar el mensaje
             Toast.makeText(context, "Registrado correctamente", Toast.LENGTH_LONG).show()
 
-            //Redirección
+            // Redirigir a la pantalla
             navController.navigate("login")
         }
     }

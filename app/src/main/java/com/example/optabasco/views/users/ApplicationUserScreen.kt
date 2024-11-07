@@ -58,15 +58,16 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
+    // Estado para manejar el desplazamiento en la pantalla
     val scrollState = rememberScrollState()
 
-    val context = navController.context
+    // Contexto para usar la base de datos y el contexto de la aplicación
     val contextDb = LocalContext.current
 
-    val coroutineScope = rememberCoroutineScope()
-
+    // Acceder al DAO de la base de datos para las solicitudes
     val applicationDao = AppDatabase.getDatabase(contextDb).applicationDao()
 
+    // Variables para almacenar la información de la solicitud
     val userId = remember { mutableStateOf(0) }
     val title = remember { mutableStateOf("") }
     val street = remember { mutableStateOf("") }
@@ -78,11 +79,14 @@ fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
     val approved = remember { mutableStateOf("") }
     val statusApplication = remember { mutableStateOf("") }
 
+    // Estado para manejar la visibilidad del diálogo de eliminación
     val showDialogDelete = remember { mutableStateOf(false) }
 
+    // Lanzar una corutina para cargar la solicitud cuando la pantalla se inicie
     LaunchedEffect(applicationId) {
         val applicationSelected = applicationId.let { applicationDao.getApplicationById(it) }
 
+        // Si se encuentra la solicitud, se carga la información en las variables de estado
         applicationSelected?.let { app ->
             userId.value = app.usuario_id
             title.value = app.titulo
@@ -95,6 +99,7 @@ fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
             approved.value = app.aprobada
             statusApplication.value = app.estadoSolicitud
 
+            // Si la calle está vacía, se muestra un texto predeterminado
             if (app.calle == "") {
                 street.value = "Sin nombre"
             }
@@ -102,6 +107,7 @@ fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
     }
 
     Scaffold(
+        // Barra superior con un botón para regresar
         topBar = { CenterAlignedTopAppBar(
             title = { Text("") },
             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -120,7 +126,9 @@ fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
         )
 
         },
+        // Contenido de la pantalla
         content = { paddingValues ->
+            // Datos del formulario de las solcitudes
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -149,6 +157,7 @@ fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
 
                 Spacer(Modifier.height(20.dp))
 
+                // Sección de dirección de la solicitud
                 Text(
                     text = "Dirección",
                     color = colorResource(R.color.pantone490),
@@ -227,6 +236,7 @@ fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
 
                 Spacer(Modifier.height(20.dp))
 
+                // Sección de datos adicionales de la solicitud
                 Text(
                     text = "Datos",
                     color = colorResource(R.color.pantone490),
@@ -286,6 +296,7 @@ fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
 
                 Spacer(modifier = Modifier.height(30.dp))
 
+                // Estado de aprobación y estado de la solicitud
                 Text(
                     text = approved.value,
                     color = colorResource(R.color.pantone490),
@@ -302,6 +313,7 @@ fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
 
                 Spacer(modifier = Modifier.height(25.dp))
 
+                // Botón para eliminar la solicitud
                 Button(
                     onClick = {
                         showDialogDelete.value = true
@@ -327,6 +339,7 @@ fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
 
     )
 
+    // Mostrar el cuadro de confirmación de eliminación si el estado es verdadero
     if (showDialogDelete.value) {
         DeleteApplicationDialog(
             onDismiss = { showDialogDelete.value = false },
@@ -345,10 +358,12 @@ fun DeleteApplicationDialog(
     navController: NavController
 ) {
 
+    // Se obtiene el contexto, la base de datos y el DAO de las solicitudes
     val contextDb = LocalContext.current
     val database = AppDatabase.getDatabase(contextDb)
     val applicationDao = database.applicationDao()
 
+    // Diálogo de confirmación para eliminar la solicitud
     AlertDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(
@@ -386,6 +401,7 @@ fun DeleteApplicationDialog(
                         horizontalArrangement = Arrangement.Center,
                         modifier = Modifier.fillMaxWidth()
                     ) {
+                        // Botón de cancelar la eliminación
                         TextButton(
                             onClick = onDismiss,
                             colors = ButtonDefaults.textButtonColors(
@@ -403,6 +419,7 @@ fun DeleteApplicationDialog(
 
                         Spacer(modifier = Modifier.width(8.dp))
 
+                        // Botón para confirmar la eliminación
                         TextButton(
                             onClick = {
                                 // Llamar a la función de cambiar contraseña

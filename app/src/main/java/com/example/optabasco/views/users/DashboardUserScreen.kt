@@ -83,13 +83,19 @@ import java.util.Locale
 
 @Composable
 fun DashboardUserScreen(navController: NavController) {
+    // Estado guardado para scroll de pantalla
     val scrollState = rememberScrollState()
 
+    // Estado del drawer (menú lateral)
     val drawerState = rememberDrawerState(DrawerValue.Closed)
+
+    // Ámbito de corutinas
     val scope = rememberCoroutineScope()
 
+    // Contexto de la base de datos local
     val contextDb = LocalContext.current
 
+    // ModalNavigationDrawer crea un menú lateral deslizable
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -101,6 +107,7 @@ fun DashboardUserScreen(navController: NavController) {
                     .padding(26.dp),
                 horizontalAlignment = Alignment.Start
             ) {
+                // Título del menú lateral
                 Text(
                     text = "OP Tabasco",
                     fontWeight = FontWeight.Bold,
@@ -111,6 +118,7 @@ fun DashboardUserScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.weight(1f))
 
+                // Botón para cerrar sesión
                 Button(
                     onClick = {
                         // Limpiar sesión de usuario
@@ -139,6 +147,7 @@ fun DashboardUserScreen(navController: NavController) {
             }
         }
     ) {
+        // Aquí se carga el contenido principal de la pantalla
         ContentDashboardUser(scope, drawerState, scrollState, navController)
     }
 }
@@ -150,12 +159,16 @@ fun ContentDashboardUser(scope: CoroutineScope, drawerState: DrawerState, scroll
     val applicationDao = AppDatabase.getDatabase(contextDb).applicationDao()
     val userDao = AppDatabase.getDatabase(contextDb).userDao()
 
+    // Estado que guarda las solicitudes obtenidas de la base de datos
     val applications = remember { mutableStateOf<List<Application>>(emptyList()) }
 
+    // Estado para mostrar el diálogo de agregar solicitud
     val showDialogAdd = remember { mutableStateOf(false) }
 
+    // ID del usuario
     val userId = remember { mutableStateOf(0) }
 
+    // Carga de datos del usuario y sus solicitudes cuando se monta la pantalla
     LaunchedEffect(Unit) {
         val userEmail = getUserSession(contextDb)
 
@@ -163,13 +176,18 @@ fun ContentDashboardUser(scope: CoroutineScope, drawerState: DrawerState, scroll
             val user = userDao.getUserByEmail(userEmail)
 
             if (user != null) {
+                // Asignar el ID del usuario
                 userId.value = user.id
+
+                // Obtener solicitudes del usuario
                 applications.value = applicationDao.getApplicationByUserId(user.id)
             }
         }
     }
 
+    // Estructura de la pantalla que contiene TopBar y el contenido principal
     Scaffold(
+        // Barra superior con el título y el ícono del menú
         topBar = { CenterAlignedTopAppBar(
             title = { Text("Solicitudes", color = colorResource(R.color.pantone468), fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center) },
             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -186,20 +204,21 @@ fun ContentDashboardUser(scope: CoroutineScope, drawerState: DrawerState, scroll
                 }
             },
             actions = {
-                // Imagen del usuario en el borde derecho del TopBar
+                // Icono del perfil en la parte derecha de la barra superior
                 Image(
                     painter = painterResource(id = R.drawable.account_circle),
                     contentDescription = "Perfil de usuario",
                     modifier = Modifier
                         .size(40.dp)
                         .clickable {
-                            navController.navigate("profile")
+                            navController.navigate("profile") // Navegar a la pantalla de perfil
                         }
                         .padding(2.dp)
                 )
             }
         ) },
         content = { paddingValues ->
+            // Contenido principal donde se muestra la lista de solicitudes
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -209,23 +228,24 @@ fun ContentDashboardUser(scope: CoroutineScope, drawerState: DrawerState, scroll
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 if (applications.value.isEmpty()) {
-                    // Muestra un mensaje si no hay solicitudes
+                    // Si no hay solicitudes, mostrar un mensaje
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Text("No hay solicitudes creadas", color = colorResource(R.color.pantone490), fontWeight = FontWeight.Bold)
                 } else {
-                    // Mostrar la lista de usuarios usando LazyColumn
+                    // Si hay solicitudes, mostrar la lista
                     LazyColumn(
                         modifier = Modifier.fillMaxSize()
                     ) {
                         items(applications.value) { application ->
-                            ApplicationItem(application, navController)
+                            ApplicationItem(application, navController) // Mostrar cada solicitud
                         }
                     }
                 }
             }
         },
         floatingActionButton = {
+            // Botón flotante para agregar una nueva solicitud
             FloatingActionButton(
                 onClick = { showDialogAdd.value = true },
                 containerColor = colorResource(R.color.pantone490)
@@ -239,6 +259,7 @@ fun ContentDashboardUser(scope: CoroutineScope, drawerState: DrawerState, scroll
         }
     )
 
+    // Si se solicita agregar una nueva solicitud, mostrar el diálogo
     if (showDialogAdd.value) {
         AddApplicationDialog(
             onDismiss = { showDialogAdd.value = false },
@@ -248,6 +269,7 @@ fun ContentDashboardUser(scope: CoroutineScope, drawerState: DrawerState, scroll
     }
 }
 
+// Estructura de cada solicitud que se muestra en la página
 @Composable
 fun ApplicationItem(application: Application, navController: NavController) {
 
@@ -262,6 +284,7 @@ fun ApplicationItem(application: Application, navController: NavController) {
             .background(colorResource(R.color.pantone465))
             .padding(16.dp)
             .clickable {
+                // Navegar a los detalles de la solicitud
                 navController.navigate("applicationUser/$applicationId")
             }
     ) {
@@ -276,6 +299,7 @@ fun ApplicationItem(application: Application, navController: NavController) {
 
         Spacer(modifier = Modifier.height(2.dp))
 
+        // Mostrar detalles de la solicitud (tipo y descripción)
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -326,6 +350,7 @@ fun ApplicationItem(application: Application, navController: NavController) {
 
             Spacer(modifier = Modifier.width(8.dp))
 
+            // Estado de la solicitud
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -347,7 +372,7 @@ fun ApplicationItem(application: Application, navController: NavController) {
     }
 }
 
-//Alert Dialog
+// Composable para agregar una nueva solicitud
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddApplicationDialog(
@@ -355,6 +380,7 @@ fun AddApplicationDialog(
     userId: Int,
     applications: MutableState<List<Application>>
 ) {
+    // Variables para los campos del cuadro de diálogo
     val titleField = remember { mutableStateOf("") }
     val streetField = remember { mutableStateOf("") }
     val ranchField = remember { mutableStateOf("") }
@@ -362,7 +388,7 @@ fun AddApplicationDialog(
     val typeApplicationField = remember { mutableStateOf("") }
     val descriptionField = remember { mutableStateOf("") }
 
-    //Crear un scope de corutina
+    // Se crea una coroutina para funciones asíncronas
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
 
@@ -373,9 +399,13 @@ fun AddApplicationDialog(
     val scrollState = rememberScrollState()
     var showInfo by remember { mutableStateOf(false) }
 
+    // Variable con las opciones de tipo de solicitudes que hay
     val options = listOf("Constitución", "Mantenimiento", "Permisos", "Licitación", "Inspección")
+
+    // Explicación de las solicitudes
     val infoText = "Tipo de Solicitudes\n\nConstitución: Para construcciones gubernamentales (escuelas, paradas, etc...)\n\nMantenimiento: Para obras ya hechas\n\nPermisos: Para construcciones o remodelación\n\nLicitación: Para participación de concursos públicos\n\nInspección: Para revisión de un proyecto en curso"
 
+    // Cuadro de diálogo para agregar una nueva solicitud
     AlertDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(
@@ -403,6 +433,7 @@ fun AddApplicationDialog(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
+                    // Campos para agregar datos de una solicitud
                     CustomOutlinedTextField(
                         titleField,
                         "Título*"
@@ -447,6 +478,7 @@ fun AddApplicationDialog(
                         }
                     }
 
+                    // Si showInfo es verdadero se muestra información extra
                     if (showInfo) {
                         Card(
                             shape = RoundedCornerShape(8.dp),
@@ -481,6 +513,7 @@ fun AddApplicationDialog(
                         horizontalArrangement = Arrangement.Center,
                         modifier = Modifier.fillMaxWidth()
                     ) {
+                        // Botón de cancelar
                         TextButton(
                             onClick = onDismiss,
                             colors = ButtonDefaults.textButtonColors(
@@ -498,8 +531,10 @@ fun AddApplicationDialog(
 
                         Spacer(modifier = Modifier.width(8.dp))
 
+                        // Botón para agregar una nueva solicitud
                         TextButton(
                             onClick = {
+                                // Valida los posibles errores
                                 val validationError = validateFieldsCreateApplication(
                                     titleField.value,
                                     streetField.value,
@@ -513,7 +548,7 @@ fun AddApplicationDialog(
                                     val currentDateString = getCurrentDate()
 
                                     coroutineScope.launch {
-                                        //Llamar a la función de inserción dentro de una corutina
+                                        // Llama a la función de inserción dentro de una corutina
                                         val application = Application(
                                             usuario_id = userId,
                                             titulo = titleField.value,
@@ -527,11 +562,13 @@ fun AddApplicationDialog(
                                             estadoSolicitud = "No confirmada"
                                         )
 
+                                        // Inserta la solicitud
                                         insertApplication(context, application)
 
-                                        // Recargar la lista de aplicaciones
+                                        // Recarga la lista de aplicaciones
                                         applications.value = applicationDao.getApplicationByUserId(userId)
 
+                                        // Cierra el cuadro de diálogo
                                         onDismiss()
                                     }
                                 } else {
@@ -558,6 +595,7 @@ fun AddApplicationDialog(
     )
 }
 
+// Función para validar los campos del formulario
 fun validateFieldsCreateApplication(
     title: String,
     street: String,
@@ -566,7 +604,7 @@ fun validateFieldsCreateApplication(
     typeApplication: String,
     description: String
 ): String? {
-    //Validar que ningún campo esté vacío
+    // Validar que ningún campo esté vacío
     if (
         title.isBlank() ||
         ranch.isBlank() ||
@@ -574,28 +612,34 @@ fun validateFieldsCreateApplication(
         typeApplication.isBlank() ||
         description.isBlank()
     ) {
+        // Si algún campo está vacío retornar mensaje
         return "Los campos con * deben estar llenos"
     }
 
+    // Si todo está bien retornar null (nada vacío)
     return null
 }
 
+// Función para insertar una solicitud
 suspend fun insertApplication(context: Context, application: Application) {
     val database = AppDatabase.getDatabase(context)
     val applicationDao = database.applicationDao()
 
+    // Llama al insert para insertar una solicitud
     applicationDao.insert(application)
 
     // Mostrar el mensaje
     Toast.makeText(context, "Creado correctamente", Toast.LENGTH_LONG).show()
 }
 
+// Función para obtener la fecha actual
 fun getCurrentDate(): String {
     val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()) // Puedes ajustar el formato de la fecha
     val currentDate = Date()
     return dateFormat.format(currentDate)
 }
 
+// Función para eliminar los datos de sesión del usuario actual
 fun clearUserSession(context: Context) {
     val sharedPref: SharedPreferences = context.getSharedPreferences("UserSession", Context.MODE_PRIVATE)
     val editor = sharedPref.edit()
