@@ -60,16 +60,21 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+// Pantalla principal de la aplicación administrativa para gestionar solicitudes
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ApplicationAdminScreen(navController: NavController, applicationId: Int) {
+    // Estado de scroll para manejar el desplazamiento de la pantalla
     val scrollState = rememberScrollState()
 
+    // Contexto necesario para acceder a recursos de la aplicación
     val context = navController.context
     val contextDb = LocalContext.current
 
+    // Define un alcance para lanzar corutinas (necesario para operaciones de base de datos)
     val coroutineScope = rememberCoroutineScope()
 
+    // Lanzador para crear un PDF a partir de la solicitud seleccionada
     val pdfLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/pdf")
     ) { uri ->
@@ -78,9 +83,11 @@ fun ApplicationAdminScreen(navController: NavController, applicationId: Int) {
         }
     }
 
+    // Obtiene instancias de los DAOs para acceder a las tablas de la base de datos
     val applicationDao = AppDatabase.getDatabase(contextDb).applicationDao()
     val userDao = AppDatabase.getDatabase(contextDb).userDao()
 
+    // Variables de estado para almacenar datos de la solicitud y del usuario asociado
     val userId = remember { mutableStateOf(0) }
     val title = remember { mutableStateOf("") }
     val street = remember { mutableStateOf("") }
@@ -93,6 +100,7 @@ fun ApplicationAdminScreen(navController: NavController, applicationId: Int) {
     val approved = remember { mutableStateOf("") }
     val statusApplication = remember { mutableStateOf("") }
 
+    // Información del usuario asociado
     val name = remember { mutableStateOf("") }
     val lastPatern = remember { mutableStateOf("") }
     val lastMatern = remember { mutableStateOf("") }
@@ -101,13 +109,16 @@ fun ApplicationAdminScreen(navController: NavController, applicationId: Int) {
     val curp = remember { mutableStateOf("") }
     val levelUser = remember { mutableStateOf(0) }
 
+    // Manejadores para el diálogo de confirmación de eliminación
     val showDialogDelete = remember { mutableStateOf(false) }
 
+    // Campos para mostrar y modificar el estado de aprobación y confirmación de la solicitud
     val approvedField = remember { mutableStateOf("") }
     val statusApplicationField = remember { mutableStateOf("") }
 
     val enabledStatusField = remember { mutableStateOf(false) }
 
+    // Lógica para habilitar o deshabilitar el estado según el valor de "aprobado"
     if (approvedField.value != "Aprobado") {
         enabledStatusField.value = false
         statusApplicationField.value = "No confirmada"
@@ -119,6 +130,7 @@ fun ApplicationAdminScreen(navController: NavController, applicationId: Int) {
         }
     }
 
+    // Carga de datos al iniciar la pantalla usando el applicationId
     LaunchedEffect(applicationId) {
         val applicationSelected = applicationId.let { applicationDao.getApplicationById(it) }
 
@@ -130,19 +142,22 @@ fun ApplicationAdminScreen(navController: NavController, applicationId: Int) {
             municipality.value = app.municipio
             typeApplication.value = app.tipoSolicitud
             description.value = app.descripcion
-            date.value = app.fecha.substring(0, 10)
+            date.value = app.fecha.substring(0, 10) // Formato corto de la fecha
             dateFull.value = app.fecha
             approved.value = app.aprobada
             statusApplication.value = app.estadoSolicitud
 
+            // Valor por defecto para la calle si no se proporciona
             if (app.calle == "") {
                 street.value = "Sin nombre"
             }
 
+            // Valores iniciales para los campos aprobados y estado de solicitud
             approvedField.value = approved.value
             statusApplicationField.value = statusApplication.value
         }
 
+        // Obtiene el usuario asociado con la solicitud
         val userSelected = userDao.getUserById(userId.value)
 
         userSelected?.let { user ->
@@ -156,10 +171,13 @@ fun ApplicationAdminScreen(navController: NavController, applicationId: Int) {
         }
     }
 
+    // Opciones de selección para la aprobación y el estado de la solicitud
     val optionsApproved = listOf("En espera","No aprobado", "Aprobado")
     val optionsStatus = listOf("No confirmada", "En proceso", "Sin éxito", "Concluida")
 
+    // Interfaz de usuario (UI) principal usando Scaffold
     Scaffold(
+        // Barra superior con título y botón de navegación
         topBar = { CenterAlignedTopAppBar(
             title = { Text("") },
             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -178,6 +196,7 @@ fun ApplicationAdminScreen(navController: NavController, applicationId: Int) {
         )
 
         },
+        // Contenido principal de la pantalla
         content = {paddingValues ->
             Column(
                 modifier = Modifier
@@ -188,6 +207,7 @@ fun ApplicationAdminScreen(navController: NavController, applicationId: Int) {
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Información de la solicitud y el usuario (organizada en secciones)
                 Spacer(Modifier.height(10.dp))
 
                 Text(
@@ -481,6 +501,7 @@ fun ApplicationAdminScreen(navController: NavController, applicationId: Int) {
 
                 Button(
                     onClick = {
+                        // Lógica para actualizar el estado de la solicitud y de aprobación
                         if (approvedField.value != "Aprobado") {
                             enabledStatusField.value = false
                             statusApplicationField.value = "No confirmada"
@@ -510,10 +531,10 @@ fun ApplicationAdminScreen(navController: NavController, applicationId: Int) {
                             val rowsAffected = applicationDao.updateApplication(editApplication)
 
                             if (rowsAffected > 0) {
-                                //Mostrar mensaje
+                                // Mensaje de éxito en la actualización
                                 Toast.makeText(context, "Actualizado correctamente", Toast.LENGTH_LONG).show()
                             } else {
-                                //Mostrar mensaje
+                                // Mensaje de error en la actualización
                                 Toast.makeText(context, "Error al actualizar", Toast.LENGTH_LONG).show()
                             }
                         }
@@ -538,6 +559,7 @@ fun ApplicationAdminScreen(navController: NavController, applicationId: Int) {
                     )
                 }
 
+                // Botón para generar PDF de la solicitud
                 Button(
                     onClick = {
                         pdfLauncher.launch("solicitud_${title.value}.pdf") // Lanza el Intent para seleccionar ubicación
@@ -560,6 +582,7 @@ fun ApplicationAdminScreen(navController: NavController, applicationId: Int) {
                     )
                 }
 
+                // Botón para eliminar la solicitud, muestra un diálogo de confirmación
                 Button(
                     onClick = {
                         showDialogDelete.value = true
@@ -585,6 +608,7 @@ fun ApplicationAdminScreen(navController: NavController, applicationId: Int) {
         }
     )
 
+    // Diálogo de confirmación para eliminar la solicitud
     if (showDialogDelete.value) {
         DeleteApplicationDialog(
             onDismiss = { showDialogDelete.value = false },

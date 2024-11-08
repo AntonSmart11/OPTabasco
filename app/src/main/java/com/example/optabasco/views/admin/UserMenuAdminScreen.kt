@@ -51,16 +51,20 @@ import com.example.optabasco.views.CustomOutlinedTextField
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserMenuAdminScreen(navController: NavController) {
+    // Obtiene el contexto de la base de datos y el UserDao para consultar usuarios
     val contextDb = LocalContext.current
     val userDao = AppDatabase.getDatabase(contextDb).userDao()
 
+    // Estado para almacenar la lista de usuarios y el término de búsqueda.
     val users = remember { mutableStateOf<List<User>>(emptyList()) }
     val searchQuery = remember { mutableStateOf("") }
 
+    // Carga inicial de los usuarios al abrir la pantalla
     LaunchedEffect(Unit) {
         users.value = userDao.getAllUsers()
     }
 
+    // Filtra los usuarios según el término de búsqueda ingresado
     val filteresUsers = users.value.filter {
         val usuario = "${it.nombre} ${it.paterno} ${it.materno}"
 
@@ -72,6 +76,7 @@ fun UserMenuAdminScreen(navController: NavController) {
         it.correo.contains(searchQuery.value, ignoreCase = true)
     }
 
+    // Estructura de la pantalla principal con barra superior y contenido
     Scaffold(
         topBar = { CenterAlignedTopAppBar(
             title = { Text("Usuarios", color = colorResource(R.color.pantone468), fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center)},
@@ -90,6 +95,7 @@ fun UserMenuAdminScreen(navController: NavController) {
             }
         ) },
         content = {paddingValues ->
+            // Contenedor principal de la pantalla de usuarios
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -98,6 +104,7 @@ fun UserMenuAdminScreen(navController: NavController) {
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Campo de búsqueda para filtrar usuarios por nombre, CURP o correo
                 OutlinedTextField(
                     value = searchQuery.value,
                     onValueChange = { searchQuery.value = it },
@@ -126,10 +133,10 @@ fun UserMenuAdminScreen(navController: NavController) {
                 )
 
                 if (filteresUsers.isEmpty()) {
-                    // Muestra un mensaje si no hay usuarios
+                    // Muestra un mensaje si no se encuentran usuarios
                     Text("No hay usuarios disponibles", color = colorResource(R.color.pantone490), fontWeight = FontWeight.Bold)
                 } else {
-                    // Mostrar la lista de usuarios usando LazyColumn
+                    // Lista de usuarios filtrados, usando LazyColumn para carga eficiente
                     LazyColumn(
                         modifier = Modifier.fillMaxSize()
                     ) {
@@ -143,8 +150,10 @@ fun UserMenuAdminScreen(navController: NavController) {
     )
 }
 
+// Composable para mostrar la información de cada usuario en la lista
 @Composable
 fun UserItem(user: User, navController: NavController) {
+    // Determina si el usuario es "Admin" o "Usuario" según su nivel
     var userType = "Usuario"
 
     if (user.nivel == 1) {
@@ -154,6 +163,8 @@ fun UserItem(user: User, navController: NavController) {
     val userId = user.id
 
     Spacer(modifier = Modifier.height(10.dp))
+
+    // Contenedor para cada usuario en la lista
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -161,9 +172,11 @@ fun UserItem(user: User, navController: NavController) {
             .background(colorResource(R.color.pantone465))
             .padding(16.dp)
             .clickable {
+                // Navegar a la pantalla de administración del usuario específico
                 navController.navigate("userAdmin/$userId")
             }
     ) {
+        // Fila con los datos del usuario
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {

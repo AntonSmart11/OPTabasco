@@ -52,26 +52,36 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ApplicationMenuAdminScreen(navController: NavController) {
+    // Obtener el contexto actual para inicializar la base de datos
     val contextDb = LocalContext.current
+
+    // Instanciar el DAO de aplicaciones y de usuarios
     val applicationDao = AppDatabase.getDatabase(contextDb).applicationDao()
     val userDao = AppDatabase.getDatabase(contextDb).userDao()
 
+    // Estado mutable para almacenar las aplicaciones y la consulta de búsqueda
     val applications = remember { mutableStateOf<List<Application>>(emptyList()) }
     val searchQuery = remember { mutableStateOf("") }
 
+    // Efecto lanzado una vez que carga las aplicaciones ordenadas por fecha
     LaunchedEffect(Unit) {
         applications.value = applicationDao.getAllApplicationsByDate()
     }
 
+    // Filtrar las aplicaciones basadas en la consulta de búsqueda
     val filteredApplications = applications.value.filter {
+        // Estado mutable para almacenar el usuario asociado a cada aplicación
         val user = remember { mutableStateOf<User?>(null) }
 
+        // Efecto lanzado para obtener el usuario asociado a cada aplicación
         LaunchedEffect(Unit) {
             user.value = userDao.getUserById(it.usuario_id)
         }
 
+        // Concatenación del nombre completo del usuario
         val usuario = "${user.value?.nombre} ${user.value?.paterno} ${user.value?.materno}"
 
+        // Verificación de si la consulta de búsqueda coincide con algún campo de la aplicación o del usuario
         usuario.contains(searchQuery.value, ignoreCase = true) ||
         user.value?.nombre?.contains(searchQuery.value, ignoreCase = true) == true ||
         user.value?.paterno?.contains(searchQuery.value, ignoreCase = true) == true ||
@@ -88,6 +98,7 @@ fun ApplicationMenuAdminScreen(navController: NavController) {
         it.aprobada.contains(searchQuery.value, ignoreCase = true)
     }
 
+    // Estructura principal de la pantalla con una barra superior y contenido
     Scaffold(
         topBar = { CenterAlignedTopAppBar(
             title = { Text("Solicitudes", color = colorResource(R.color.pantone468), fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center) },
@@ -114,6 +125,7 @@ fun ApplicationMenuAdminScreen(navController: NavController) {
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Campo de búsqueda
                 OutlinedTextField(
                     value = searchQuery.value,
                     onValueChange = { searchQuery.value = it },
@@ -141,6 +153,7 @@ fun ApplicationMenuAdminScreen(navController: NavController) {
                     modifier = Modifier.fillMaxWidth().padding(5.dp)
                 )
 
+                // Mostrar mensaje si no hay solicitudes disponibles
                 if (filteredApplications.isEmpty()){
                     // Muestra un mensaje si no hay solicitudes
                     Text("No hay solicitudes disponibles", color = colorResource(R.color.pantone490), fontWeight = FontWeight.Bold)
@@ -150,13 +163,15 @@ fun ApplicationMenuAdminScreen(navController: NavController) {
                         modifier = Modifier.fillMaxSize()
                     ) {
                         items(filteredApplications) { app ->
-
+                            // Estado mutable para almacenar el usuario de cada aplicación
                             val user = remember { mutableStateOf<User?>(null) }
 
+                            // Efecto lanzado para cargar el usuario de cada aplicación
                             LaunchedEffect(Unit) {
                                 user.value = userDao.getUserById(app.usuario_id)
                             }
 
+                            // Componente que muestra cada aplicación
                             ApplicationItem(app, user, navController)
                         }
                     }
@@ -166,11 +181,13 @@ fun ApplicationMenuAdminScreen(navController: NavController) {
     )
 }
 
+// Composable para mostrar cada elemento de aplicación en la lista
 @Composable
 fun ApplicationItem(application: Application, user: MutableState<User?>, navController: NavController) {
 
     val applicationId = application.id
 
+    // Extraer la fecha y la hora de la aplicación
     val date = application.fecha.substring(0, 10)
     val time = application.fecha.substring(11, 16)
 
@@ -186,6 +203,7 @@ fun ApplicationItem(application: Application, user: MutableState<User?>, navCont
                 navController.navigate("applicationAdmin/$applicationId")
             }
     ) {
+        // Datos para el composable Item de la solicitud
         Text(
             text = application.titulo,
             fontWeight = FontWeight.Bold,

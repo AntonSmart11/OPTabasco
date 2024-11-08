@@ -59,15 +59,20 @@ import kotlinx.coroutines.withContext
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserAdminScreen(navController: NavController, userId: Int) {
+    // Recordar el estado del desplazamiento vertical de la pantalla
     val scrollState = rememberScrollState()
 
+    // Obtener el contexto de la navegación y de la base de datos
     val context = navController.context
     val contextDb = LocalContext.current
 
+    // Recordar el alcance de las corrutinas para lanzar tareas en segundo plano
     val coroutineScope = rememberCoroutineScope()
 
+    // Obtener una instancia de UserDao para acceder a la base de datos de usuarios
     val userDao = AppDatabase.getDatabase(contextDb).userDao()
 
+    // Variables de estado para almacenar los datos del usuario y actualizar la interfaz
     val nameField = remember { mutableStateOf("") }
     val lastPaternField = remember { mutableStateOf("") }
     val lastMaternField = remember { mutableStateOf("") }
@@ -77,13 +82,17 @@ fun UserAdminScreen(navController: NavController, userId: Int) {
     val levelUser = remember { mutableStateOf(2) }
     val passwordUser = remember { mutableStateOf("") }
 
+    // Variables de estado para controlar la visibilidad de los diálogos
     val showDialogPassword = remember { mutableStateOf(false) }
     val showDialogDelete = remember { mutableStateOf(false) }
 
+    // Cargar los datos del usuario cuando se pasa el userId
     LaunchedEffect(userId) {
         val userSelected = userId.let { userDao.getUserById(it) }
 
+        // Actualizar los campos con la información del usuario seleccionado
         userSelected?.let { user ->
+            // Asignar los valores del usuario a los campos de texto
             nameField.value = user.nombre
             lastPaternField.value = user.paterno
             lastMaternField.value = user.materno
@@ -95,12 +104,14 @@ fun UserAdminScreen(navController: NavController, userId: Int) {
         }
     }
 
+    // Definir el título de la pantalla según el nivel de usuario
     val title = if (levelUser.value == 1) {
         "Admin"
     } else {
         "Usuario"
     }
 
+    // Estructura de la pantalla principal con Scaffold para el AppBar y contenido
     Scaffold(
         topBar = { CenterAlignedTopAppBar(
             title = { Text("") },
@@ -119,6 +130,7 @@ fun UserAdminScreen(navController: NavController, userId: Int) {
             },
         ) },
         content = { paddingValues ->
+            // Contenedor principal de la pantalla
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -130,6 +142,8 @@ fun UserAdminScreen(navController: NavController, userId: Int) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Spacer(Modifier.height(10.dp))
+
+                // Mostrar el título de la pantalla
                 Text(
                     text = title,
                     color = colorResource(R.color.pantone490),
@@ -139,6 +153,7 @@ fun UserAdminScreen(navController: NavController, userId: Int) {
 
                 Spacer(Modifier.height(20.dp))
 
+                // Campos de entrada personalizados para cada atributo del usuario
                 CustomTextField(
                     valueState = nameField,
                     label = "Nombre(s)"
@@ -175,6 +190,7 @@ fun UserAdminScreen(navController: NavController, userId: Int) {
                 )
                 Spacer(modifier = Modifier.height(20.dp))
 
+                // Botón para guardar cambios en el usuario
                 Button(
                     onClick = {
                         coroutineScope.launch {
@@ -223,6 +239,7 @@ fun UserAdminScreen(navController: NavController, userId: Int) {
 
                 Spacer(modifier = Modifier.height(20.dp))
 
+                // Botón para abrir el diálogo de cambio de contraseña
                 Button(
                     onClick = {
                         showDialogPassword.value = true
@@ -246,6 +263,7 @@ fun UserAdminScreen(navController: NavController, userId: Int) {
 
                 val userSession = getUserSession(context)
 
+                // Mostrar botón de eliminación si el usuario no es el mismo que inició sesión
                 if (emailField.value != userSession) {
                     if (levelUser.value == 2) {
                         Spacer(modifier = Modifier.height(20.dp))
@@ -276,6 +294,7 @@ fun UserAdminScreen(navController: NavController, userId: Int) {
         }
     )
 
+    // Mostrar el diálogo de cambio de contraseña si está habilitado
     if (showDialogPassword.value) {
         ChangePasswordDialogAdmin(
             onDismiss = { showDialogPassword.value = false },
@@ -283,6 +302,7 @@ fun UserAdminScreen(navController: NavController, userId: Int) {
         )
     }
 
+    // Mostrar el diálogo de confirmación de eliminación si está habilitado
     if (showDialogDelete.value) {
         DeleteAccountDialog(
             onDismiss = { showDialogDelete.value = false },
@@ -367,6 +387,7 @@ fun ChangePasswordDialogAdmin(
 
                         Spacer(modifier = Modifier.width(8.dp))
 
+                        // Botón para aceptar el cambio de contraseña
                         TextButton(
                             onClick = {
                                 // Llamar a la función de cambiar contraseña

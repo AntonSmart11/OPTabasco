@@ -61,13 +61,17 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun DashboardAdminScreen(navController: NavController) {
+    // ScrollState para habilitar desplazamiento vertical en la columna
     val scrollState = rememberScrollState()
 
+    // DrawerState para manejar el estado del menú lateral
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
+    // Contexto de la aplicación, necesario para acciones como la limpieza de sesión
     val contextDb = LocalContext.current
 
+    // Configuración del menú lateral y su contenido
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -91,10 +95,10 @@ fun DashboardAdminScreen(navController: NavController) {
 
                 Button(
                     onClick = {
-                        // Limpiar sesión de usuario
+                        // Llamada para limpiar sesión de usuario
                         clearUserSession(contextDb)
 
-                        // Navegar a la pantalla de login y limpiar el historial
+                        // Navegar a pantalla de login y eliminar el historial de navegación
                         navController.navigate("login") {
                             popUpTo(0) { inclusive = true }
                         }
@@ -117,6 +121,7 @@ fun DashboardAdminScreen(navController: NavController) {
             }
         }
     ) {
+        // Llama a la función que muestra el contenido principal del dashboard
         ContentDashboardAdmin(scope, drawerState, scrollState, navController)
     }
 }
@@ -124,6 +129,7 @@ fun DashboardAdminScreen(navController: NavController) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContentDashboardAdmin(scope: CoroutineScope, drawerState: DrawerState, scrollState: ScrollState, navController: NavController) {
+    // Estructura principal con barra superior y contenido en el dashboard
     Scaffold(
         topBar = { CenterAlignedTopAppBar(
             title = { Text("", color = colorResource(R.color.pantone468), fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center) },
@@ -132,6 +138,7 @@ fun ContentDashboardAdmin(scope: CoroutineScope, drawerState: DrawerState, scrol
                 titleContentColor = colorResource(R.color.pantone468)
             ),
             navigationIcon = {
+                // Botón de menú que abre el drawer al hacer clic
                 IconButton(onClick = { scope.launch { drawerState.open() } }) {
                     Icon(
                         painter = painterResource(R.drawable.menu),
@@ -141,7 +148,7 @@ fun ContentDashboardAdmin(scope: CoroutineScope, drawerState: DrawerState, scrol
                 }
             },
             actions = {
-                // Imagen del usuario en el borde derecho del TopBar
+                // Imagen de perfil que navega a la pantalla de perfil al hacer clic
                 Image(
                     painter = painterResource(id = R.drawable.account_circle),
                     contentDescription = "Perfil de usuario",
@@ -165,11 +172,12 @@ fun ContentDashboardAdmin(scope: CoroutineScope, drawerState: DrawerState, scrol
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Muestra el encabezado con el título "Panel de Control"
                 CustomSquareWithText()
 
                 Spacer(Modifier.height(20.dp))
 
-                // Pregunta en el dashboard
+                // Pregunta al usuario
                 Text(
                     text = "¿Qué hacer hoy?",
                     color = colorResource(R.color.pantone490),
@@ -181,15 +189,20 @@ fun ContentDashboardAdmin(scope: CoroutineScope, drawerState: DrawerState, scrol
                 )
 
                 Spacer(modifier = Modifier.height(30.dp))
+
+                // Botón que redirige a la pantalla de solicitudes
                 BoxButton(R.drawable.application, "Solicitudes", R.color.pantone465, navController, "applicationMenuAdmin")
 
                 Spacer(modifier = Modifier.height(30.dp))
+
+                // Botón que redirige a la pantalla de usuarios
                 BoxButton(R.drawable.users, "Usuarios", R.color.pantone465, navController, "userMenuAdmin")
             }
         }
     )
 }
 
+// Función composable para mostrar un botón de caja con imagen y texto
 @Composable
 fun BoxButton(image: Int, title:String, color: Int, navController: NavController, destination: String) {
     Box(
@@ -229,6 +242,7 @@ fun BoxButton(image: Int, title:String, color: Int, navController: NavController
     }
 }
 
+// Función composable para el encabezado del panel de control
 @Composable
 fun CustomSquareWithText() {
     Box(
@@ -245,6 +259,7 @@ fun CustomSquareWithText() {
             .padding(bottom = 25.dp),
         contentAlignment = Alignment.Center
     ) {
+        // Texto del encabezado
         Text(
             text = "Panel de Control",
             color = colorResource(R.color.pantone468),
