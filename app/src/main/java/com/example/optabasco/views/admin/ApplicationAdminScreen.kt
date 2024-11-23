@@ -51,6 +51,7 @@ import androidx.navigation.NavController
 import com.example.optabasco.R
 import com.example.optabasco.database.AppDatabase
 import com.example.optabasco.database.models.Application
+import com.example.optabasco.database.models.User
 import com.example.optabasco.views.CustomOutlinedSelectField
 import com.example.optabasco.views.CustomSelectField
 import com.example.optabasco.views.generatePdf
@@ -73,15 +74,6 @@ fun ApplicationAdminScreen(navController: NavController, applicationId: Int) {
 
     // Define un alcance para lanzar corutinas (necesario para operaciones de base de datos)
     val coroutineScope = rememberCoroutineScope()
-
-    // Lanzador para crear un PDF a partir de la solicitud seleccionada
-    val pdfLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("application/pdf")
-    ) { uri ->
-        uri?.let {
-            generatePdf(context, it)
-        }
-    }
 
     // Obtiene instancias de los DAOs para acceder a las tablas de la base de datos
     val applicationDao = AppDatabase.getDatabase(contextDb).applicationDao()
@@ -174,6 +166,40 @@ fun ApplicationAdminScreen(navController: NavController, applicationId: Int) {
     // Opciones de selección para la aprobación y el estado de la solicitud
     val optionsApproved = listOf("En espera","No aprobado", "Aprobado")
     val optionsStatus = listOf("No confirmada", "En proceso", "Sin éxito", "Concluida")
+
+    // Lanzador para crear un PDF a partir de la solicitud seleccionada
+    val pdfLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/pdf")
+    ) { uri ->
+        uri?.let {
+            generatePdf(context, it,
+                Application(
+                    applicationId,
+                    userId.value,
+                    title.value,
+                    street.value,
+                    ranch.value,
+                    municipality.value,
+                    typeApplication.value,
+                    description.value,
+                    date.value,
+                    approved.value,
+                    statusApplication.value
+                ),
+                User(
+                    userId.value,
+                    name.value,
+                    lastPatern.value,
+                    lastMatern.value,
+                    email.value,
+                    number.value,
+                    curp.value,
+                    "",
+                    levelUser.value
+                )
+            )
+        }
+    }
 
     // Interfaz de usuario (UI) principal usando Scaffold
     Scaffold(
@@ -530,6 +556,8 @@ fun ApplicationAdminScreen(navController: NavController, applicationId: Int) {
                         coroutineScope.launch {
                             val rowsAffected = applicationDao.updateApplication(editApplication)
 
+                            approved.value = approvedField.value
+
                             if (rowsAffected > 0) {
                                 // Mensaje de éxito en la actualización
                                 Toast.makeText(context, "Actualizado correctamente", Toast.LENGTH_LONG).show()
@@ -559,27 +587,29 @@ fun ApplicationAdminScreen(navController: NavController, applicationId: Int) {
                     )
                 }
 
-                // Botón para generar PDF de la solicitud
-                Button(
-                    onClick = {
-                        pdfLauncher.launch("solicitud_${title.value}.pdf") // Lanza el Intent para seleccionar ubicación
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 90.dp)
-                        .padding(bottom = 32.dp)
-                        .height(50.dp),
-                    shape = RoundedCornerShape(30.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = colorResource(R.color.pantone465)
-                    )
-                ) {
-                    Text(
-                        text = "Generar PDF",
-                        color = colorResource(R.color.pantone490),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                if (approved.value == "Aprobado") {
+                    // Botón para generar PDF de la solicitud
+                    Button(
+                        onClick = {
+                            pdfLauncher.launch("solicitud_${title.value}.pdf") // Lanza el Intent para seleccionar ubicación
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 90.dp)
+                            .padding(bottom = 32.dp)
+                            .height(50.dp),
+                        shape = RoundedCornerShape(30.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colorResource(R.color.pantone465)
+                        )
+                    ) {
+                        Text(
+                            text = "Generar PDF",
+                            color = colorResource(R.color.pantone490),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
 
                 // Botón para eliminar la solicitud, muestra un diálogo de confirmación

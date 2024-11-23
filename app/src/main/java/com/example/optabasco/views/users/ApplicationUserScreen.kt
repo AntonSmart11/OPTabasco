@@ -2,6 +2,8 @@ package com.example.optabasco.views.users
 
 import android.icu.text.SimpleDateFormat
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -49,6 +51,8 @@ import androidx.navigation.NavController
 import com.example.optabasco.R
 import com.example.optabasco.database.AppDatabase
 import com.example.optabasco.database.models.Application
+import com.example.optabasco.database.models.User
+import com.example.optabasco.views.generatePdf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -62,9 +66,11 @@ fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
     val scrollState = rememberScrollState()
 
     // Contexto para usar la base de datos y el contexto de la aplicación
+    val context = navController.context
     val contextDb = LocalContext.current
 
     // Acceder al DAO de la base de datos para las solicitudes
+    val userDao = AppDatabase.getDatabase(contextDb).userDao()
     val applicationDao = AppDatabase.getDatabase(contextDb).applicationDao()
 
     // Variables para almacenar la información de la solicitud
@@ -78,6 +84,15 @@ fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
     val date = remember { mutableStateOf("") }
     val approved = remember { mutableStateOf("") }
     val statusApplication = remember { mutableStateOf("") }
+
+    // Información del usuario asociado
+    val name = remember { mutableStateOf("") }
+    val lastPatern = remember { mutableStateOf("") }
+    val lastMatern = remember { mutableStateOf("") }
+    val email = remember { mutableStateOf("") }
+    val number = remember { mutableStateOf("") }
+    val curp = remember { mutableStateOf("") }
+    val levelUser = remember { mutableStateOf(0) }
 
     // Estado para manejar la visibilidad del diálogo de eliminación
     val showDialogDelete = remember { mutableStateOf(false) }
@@ -103,6 +118,53 @@ fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
             if (app.calle == "") {
                 street.value = "Sin nombre"
             }
+
+            // Obtiene el usuario asociado con la solicitud
+            val userSelected = userDao.getUserById(userId.value)
+
+            userSelected?.let { user ->
+                name.value = user.nombre
+                lastPatern.value = user.paterno
+                lastMatern.value = user.materno
+                email.value = user.correo
+                number.value = user.telefono
+                curp.value = user.curp
+                levelUser.value = user.nivel
+            }
+        }
+    }
+
+    // Lanzador para crear un PDF a partir de la solicitud seleccionada
+    val pdfLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/pdf")
+    ) { uri ->
+        uri?.let {
+            generatePdf(context, it,
+                Application(
+                    applicationId,
+                    userId.value,
+                    title.value,
+                    street.value,
+                    ranch.value,
+                    municipality.value,
+                    typeApplication.value,
+                    description.value,
+                    date.value,
+                    approved.value,
+                    statusApplication.value
+                ),
+                User(
+                    userId.value,
+                    name.value,
+                    lastPatern.value,
+                    lastMatern.value,
+                    email.value,
+                    number.value,
+                    curp.value,
+                    "",
+                    levelUser.value
+                )
+            )
         }
     }
 
@@ -313,6 +375,31 @@ fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
 
                 Spacer(modifier = Modifier.height(25.dp))
 
+                if (approved.value == "Aprobado") {
+                    // Botón para generar PDF de la solicitud
+                    Button(
+                        onClick = {
+                            pdfLauncher.launch("solicitud_${title.value}.pdf") // Lanza el Intent para seleccionar ubicación
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 90.dp)
+                            .padding(bottom = 32.dp)
+                            .height(50.dp),
+                        shape = RoundedCornerShape(30.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colorResource(R.color.pantone465)
+                        )
+                    ) {
+                        Text(
+                            text = "Generar PDF",
+                            color = colorResource(R.color.pantone490),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
                 // Botón para eliminar la solicitud
                 Button(
                     onClick = {
@@ -320,11 +407,12 @@ fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 70.dp)
+                        .padding(horizontal = 90.dp)
+                        .padding(bottom = 32.dp)
                         .height(50.dp),
                     shape = RoundedCornerShape(30.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = colorResource(R.color.pantone7420)
+                        containerColor = colorResource(R.color.pantone1805)
                     )
                 ) {
                     Text(
