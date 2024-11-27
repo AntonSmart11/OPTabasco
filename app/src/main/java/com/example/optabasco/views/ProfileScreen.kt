@@ -82,6 +82,7 @@ fun ProfileScreen(navController: NavController) {
     val curpField = remember { mutableStateOf("") }
     val passwordUser = remember { mutableStateOf("") }
     val levelUser = remember { mutableStateOf(2) }
+    val tokenUser = remember { mutableStateOf("") }
     val idUser = remember { mutableStateOf(0) }
 
     // Estados para controlar si las ventanas emergentes deben ser visibles
@@ -102,6 +103,7 @@ fun ProfileScreen(navController: NavController) {
             curpField.value = user.curp
             passwordUser.value = user.contrasena
             levelUser.value = user.nivel
+            tokenUser.value = user.token
             idUser.value = user.id
         }
     }
@@ -208,7 +210,8 @@ fun ProfileScreen(navController: NavController) {
                                     telefono = numberField.value,
                                     curp = curpField.value.uppercase(),
                                     contrasena = passwordUser.value,
-                                    nivel = levelUser.value
+                                    nivel = levelUser.value,
+                                    ""
                                 )
 
                                 updateUser(context, editUser)

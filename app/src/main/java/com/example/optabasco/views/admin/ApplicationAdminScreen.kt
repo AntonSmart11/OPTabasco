@@ -48,18 +48,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
+import com.android.volley.Response
+import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.Volley
 import com.example.optabasco.R
 import com.example.optabasco.database.AppDatabase
 import com.example.optabasco.database.models.Application
 import com.example.optabasco.database.models.User
+import com.example.optabasco.firebase.MyFirebaseAuth
 import com.example.optabasco.views.CustomOutlinedSelectField
 import com.example.optabasco.views.CustomSelectField
 import com.example.optabasco.views.generatePdf
 import com.example.optabasco.views.saveUserSession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 
 // Pantalla principal de la aplicación administrativa para gestionar solicitudes
 @OptIn(ExperimentalMaterial3Api::class)
@@ -100,6 +106,7 @@ fun ApplicationAdminScreen(navController: NavController, applicationId: Int) {
     val number = remember { mutableStateOf("") }
     val curp = remember { mutableStateOf("") }
     val levelUser = remember { mutableStateOf(0) }
+    val tokenUser = remember { mutableStateOf("") }
 
     // Manejadores para el diálogo de confirmación de eliminación
     val showDialogDelete = remember { mutableStateOf(false) }
@@ -160,6 +167,7 @@ fun ApplicationAdminScreen(navController: NavController, applicationId: Int) {
             number.value = user.telefono
             curp.value = user.curp
             levelUser.value = user.nivel
+            tokenUser.value = user.token
         }
     }
 
@@ -195,7 +203,8 @@ fun ApplicationAdminScreen(navController: NavController, applicationId: Int) {
                     number.value,
                     curp.value,
                     "",
-                    levelUser.value
+                    levelUser.value,
+                    ""
                 )
             )
         }
@@ -561,6 +570,25 @@ fun ApplicationAdminScreen(navController: NavController, applicationId: Int) {
                             if (rowsAffected > 0) {
                                 // Mensaje de éxito en la actualización
                                 Toast.makeText(context, "Actualizado correctamente", Toast.LENGTH_LONG).show()
+
+                                if (!tokenUser.value.isNullOrEmpty()) {
+                                    var titleNotification = ""
+                                    var messageNotification = ""
+
+                                    if (approvedField.value == "Aprobado") {
+                                        titleNotification = "Aprobada"
+                                    } else {
+                                        titleNotification = "No Aprobada"
+                                        messageNotification = "no"
+                                    }
+
+                                    sendTokenNotification(
+                                        token = tokenUser.value,
+                                        title = "Solicitud $titleNotification",
+                                        message = "${name.value} ${lastPatern.value} ${lastMatern.value}, su solicitud '${title.value}' $messageNotification ha sido aprobada",
+                                        context = contextDb
+                                    )
+                                }
                             } else {
                                 // Mensaje de error en la actualización
                                 Toast.makeText(context, "Error al actualizar", Toast.LENGTH_LONG).show()
@@ -763,4 +791,69 @@ fun DeleteApplicationDialog(
             }
         }
     )
+}
+
+fun sendTokenNotification(
+    token: String,
+    title: String,
+    message: String,
+    context: Context
+) {
+    // Lanza un coroutine para obtener el token en segundo plano
+    GlobalScope.launch(Dispatchers.Main) {
+        val accessToken = withContext(Dispatchers.IO) {
+            // Obtén el access token en segundo plano
+            MyFirebaseAuth.getAccessToken(context)
+        }
+
+        if (accessToken != null) {
+            // Si el access token es válido, procede con el envío de la notificación
+            sendNotificationToDevice(token, accessToken, title, message, context)
+        } else {
+            // Si no se obtuvo un access token, muestra un mensaje de error
+            Toast.makeText(context, "Error al obtener el token", Toast.LENGTH_LONG).show()
+        }
+    }
+}
+
+private fun sendNotificationToDevice(
+    token: String,
+    auth: String,
+    title: String,
+    message: String,
+    context: Context
+) {
+    val url = "https://fcm.googleapis.com/v1/projects/optabasco-865a5/messages:send"
+    val requestQueue = Volley.newRequestQueue(context)
+
+    val jsonBody = JSONObject().apply {
+        put("message", JSONObject().apply {
+            put("token", token)
+            put("notification", JSONObject().apply {
+                put("title", title)
+                put("body", message)
+            })
+        })
+    }
+
+    val request = object : JsonObjectRequest(
+        Method.POST, url, jsonBody,
+        Response.Listener { response ->
+            Toast.makeText(context, "Notificación enviada exitosamente", Toast.LENGTH_LONG).show()
+        },
+        Response.ErrorListener { error ->
+            Toast.makeText(context, "Error al enviar notificación: ${error.message}", Toast.LENGTH_LONG).show()
+        }
+    ) {
+        override fun getHeaders(): MutableMap<String, String> {
+            val headers = HashMap<String, String>()
+            val accessToken = auth
+
+            headers["Authorization"] = "Bearer $accessToken"
+            headers["Content-Type"] = "application/json"
+            return headers
+        }
+    }
+
+    requestQueue.add(request)
 }

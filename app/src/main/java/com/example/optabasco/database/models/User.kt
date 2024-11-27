@@ -15,4 +15,5 @@ data class User(
     val curp: String,
     var contrasena: String,
     val nivel: Int,
+    val token: String
 )

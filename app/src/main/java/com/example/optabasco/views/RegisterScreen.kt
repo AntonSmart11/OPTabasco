@@ -184,7 +184,8 @@ fun RegisterScreen(navController: NavController) {
                                         telefono = numberField.value,
                                         curp = curpField.value.uppercase(),
                                         contrasena = passwordField.value,
-                                        nivel = 2
+                                        nivel = 2,
+                                        token = ""
                                     )
                                     insertUser(context, user, navController)
                                 }

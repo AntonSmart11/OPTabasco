@@ -81,6 +81,7 @@ fun UserAdminScreen(navController: NavController, userId: Int) {
     val curpField = remember { mutableStateOf("") }
     val levelUser = remember { mutableStateOf(2) }
     val passwordUser = remember { mutableStateOf("") }
+    val tokenUser = remember { mutableStateOf("") }
 
     // Variables de estado para controlar la visibilidad de los diálogos
     val showDialogPassword = remember { mutableStateOf(false) }
@@ -101,6 +102,7 @@ fun UserAdminScreen(navController: NavController, userId: Int) {
             curpField.value = user.curp
             levelUser.value = user.nivel
             passwordUser.value = user.contrasena
+            tokenUser.value = user.token
         }
     }
 
@@ -213,7 +215,8 @@ fun UserAdminScreen(navController: NavController, userId: Int) {
                                     telefono = numberField.value,
                                     curp = curpField.value.uppercase(),
                                     nivel = levelUser.value,
-                                    contrasena = passwordUser.value
+                                    contrasena = passwordUser.value,
+                                    token = tokenUser.value
                                 )
 
                                 updateUserWithoutSaveEmail(context, editUser)

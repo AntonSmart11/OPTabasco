@@ -65,7 +65,8 @@ abstract class AppDatabase : RoomDatabase() {
                 correo = "admin@optabasco.com",
                 curp = "ADMIN000000000000",
                 contrasena = "admin123",
-                nivel = 1
+                nivel = 1,
+                token = ""
             )
         }
 

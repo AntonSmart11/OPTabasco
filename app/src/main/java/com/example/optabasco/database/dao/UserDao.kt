@@ -38,6 +38,10 @@ interface UserDao {
     @Update
     suspend fun updateUser(user: User) : Int
 
+    // Actualiza el token de un usuario específico identificado por su ID
+    @Query("UPDATE usuarios SET token = :newToken WHERE correo = :email")
+    suspend fun updateToken(email: String, newToken: String): Int
+
     // Elimina un usuario específico de la base de datos.
     // Devuelve el número de filas afectadas.
     @Delete

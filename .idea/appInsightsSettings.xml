@@ -9,10 +9,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.example.optabasco" />
+                  <option name="mobileSdkAppId" value="1:658472173945:android:61db59a7ab0be91c156fa8" />
+                  <option name="projectId" value="optabasco-865a5" />
+                  <option name="projectNumber" value="658472173945" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

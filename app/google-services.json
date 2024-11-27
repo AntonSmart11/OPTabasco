@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "658472173945",
+    "project_id": "optabasco-865a5",
+    "storage_bucket": "optabasco-865a5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:658472173945:android:61db59a7ab0be91c156fa8",
+        "android_client_info": {
+          "package_name": "com.example.optabasco"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAa1G6jRkzfSEAUDETnv6OC2Ezwc6r9Jms"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

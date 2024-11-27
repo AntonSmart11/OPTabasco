@@ -162,7 +162,8 @@ fun ApplicationUserScreen(navController: NavController, applicationId: Int) {
                     number.value,
                     curp.value,
                     "",
-                    levelUser.value
+                    levelUser.value,
+                    ""
                 )
             )
         }

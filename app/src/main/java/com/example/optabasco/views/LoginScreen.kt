@@ -3,6 +3,7 @@ package com.example.optabasco.views
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -26,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -45,6 +47,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.optabasco.R
 import com.example.optabasco.database.AppDatabase
+import com.example.optabasco.firebase.MyFirebaseAuth
+import com.example.optabasco.firebase.MyFirebaseMessagingService
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
@@ -115,6 +119,15 @@ fun LoginScreen(navController: NavController) {
 
                                     // Guarda la sesión del usuario en SharedPreferences
                                     saveUserSession(context, emailField.value)
+
+                                    // Guarda el FCM Token del dispositivo para notificación
+                                    MyFirebaseMessagingService.getToken { token ->
+                                        if (token != null) {
+                                            coroutineScope.launch {
+                                                userDao.updateToken(emailField.value, token)
+                                            }
+                                        }
+                                    }
 
                                     // Navega al dashboard correspondiente según el nivel del usuario
                                     if (user.nivel == 1) {
